@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 360" width="920" height="360" role="img" aria-label="Kent Business College">
+  <defs>
+    <style>
+      .purple { fill: #5c2ce0; }
+      .purple-stroke { stroke: #5c2ce0; }
+      .gold-stroke { stroke: #a26b12; }
+      .gold-fill { fill: #a26b12; }
+      .light { fill: #ffffff; }
+      .dark { fill: #4b1fd3; }
+      .text { font-family: 'Segoe UI', Arial, sans-serif; font-weight: 700; fill: #5c2ce0; }
+    </style>
+  </defs>
+
+  <rect x="0" y="0" width="920" height="360" fill="none"/>
+
+  <g transform="translate(24,20)">
+    <g fill="#5c2ce0">
+      <ellipse cx="22" cy="72" rx="8" ry="13" transform="rotate(-30 22 72)"/>
+      <ellipse cx="14" cy="100" rx="8" ry="13" transform="rotate(-42 14 100)"/>
+      <ellipse cx="9" cy="128" rx="8" ry="13" transform="rotate(-56 9 128)"/>
+      <ellipse cx="10" cy="157" rx="8" ry="13" transform="rotate(-68 10 157)"/>
+      <ellipse cx="18" cy="185" rx="8" ry="13" transform="rotate(-82 18 185)"/>
+      <ellipse cx="30" cy="211" rx="8" ry="13" transform="rotate(-98 30 211)"/>
+      <ellipse cx="47" cy="234" rx="8" ry="13" transform="rotate(-110 47 234)"/>
+      <ellipse cx="67" cy="254" rx="8" ry="13" transform="rotate(-122 67 254)"/>
+      <ellipse cx="89" cy="269" rx="8" ry="13" transform="rotate(-134 89 269)"/>
+      <ellipse cx="113" cy="281" rx="8" ry="13" transform="rotate(-146 113 281)"/>
+    </g>
+
+    <g fill="#5c2ce0">
+      <ellipse cx="304" cy="72" rx="8" ry="13" transform="rotate(30 304 72)"/>
+      <ellipse cx="312" cy="100" rx="8" ry="13" transform="rotate(42 312 100)"/>
+      <ellipse cx="317" cy="128" rx="8" ry="13" transform="rotate(56 317 128)"/>
+      <ellipse cx="316" cy="157" rx="8" ry="13" transform="rotate(68 316 157)"/>
+      <ellipse cx="308" cy="185" rx="8" ry="13" transform="rotate(82 308 185)"/>
+      <ellipse cx="296" cy="211" rx="8" ry="13" transform="rotate(98 296 211)"/>
+      <ellipse cx="279" cy="234" rx="8" ry="13" transform="rotate(110 279 234)"/>
+      <ellipse cx="259" cy="254" rx="8" ry="13" transform="rotate(122 259 254)"/>
+      <ellipse cx="237" cy="269" rx="8" ry="13" transform="rotate(134 237 269)"/>
+      <ellipse cx="213" cy="281" rx="8" ry="13" transform="rotate(146 213 281)"/>
+    </g>
+
+    <path d="M112 297 Q163 272 214 297" fill="none" stroke="#5c2ce0" stroke-width="4" stroke-linecap="round"/>
+
+    <path d="M163 28 C122 28 83 39 61 56 L61 169 C61 220 98 265 163 294 C228 265 265 220 265 169 L265 56 C243 39 204 28 163 28 Z"
+          fill="#ffffff" stroke="#a26b12" stroke-width="6"/>
+
+    <rect x="61" y="56" width="102" height="56" fill="#ffffff"/>
+    <rect x="163" y="56" width="102" height="56" fill="#5c2ce0"/>
+    <rect x="61" y="112" width="102" height="57" fill="#5c2ce0"/>
+    <rect x="163" y="112" width="102" height="57" fill="#ffffff"/>
+
+    <line x1="163" y1="56" x2="163" y2="169" stroke="#a26b12" stroke-width="4"/>
+    <line x1="61" y1="112" x2="265" y2="112" stroke="#a26b12" stroke-width="4"/>
+
+    <path d="M183 95 C191 88 198 84 208 81 C213 81 217 85 216 90 C214 94 209 94 205 94 C210 98 212 103 210 108 C208 111 203 111 199 109 C195 105 190 100 186 95 Z"
+          fill="#ffffff"/>
+
+    <path d="M132 149 C126 153 124 160 128 166 C132 171 140 170 144 164 C146 161 146 157 145 153 C151 156 154 161 154 167 C153 175 145 182 135 183 C125 183 117 177 115 169 C114 160 120 152 132 149 Z"
+          fill="#d6c2ff"/>
+  </g>
+
+  <line x1="372" y1="34" x2="372" y2="326" stroke="#5c2ce0" stroke-width="3"/>
+
+  <g transform="translate(402,40)" class="text">
+    <text x="0" y="95" font-size="102">Kent</text>
+    <text x="0" y="185" font-size="78">Business</text>
+    <text x="0" y="275" font-size="78">College</text>
+  </g>
+</svg>

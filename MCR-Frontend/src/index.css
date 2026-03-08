@@ -1,0 +1,13 @@
+﻿@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body,
+  #root {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    user-select: text;
+  }
+}

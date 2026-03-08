@@ -1,0 +1,439 @@
+openapi: 3.0.3
+info:
+  title: MCR API
+  version: 1.0.0
+  description: Monthly Coach Review endpoints
+paths:
+  /api/mcr/reviews/:
+    get:
+      operationId: api_mcr_reviews_list
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DashboardMcrReviewDetail'
+          description: ''
+  /api/mcr/reviews/{id}/:
+    get:
+      operationId: api_mcr_reviews_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardMcrReviewDetail'
+          description: ''
+  /api/mcr/reviews/{id}/booking_session/:
+    get:
+      operationId: api_mcr_reviews_booking_session_list
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BookingSession'
+          description: ''
+  /api/mcr/reviews/{id}/created_at/:
+    get:
+      operationId: api_mcr_reviews_created_at_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/mcr/reviews/{id}/export/:
+    get:
+      operationId: api_mcr_reviews_export_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+                format: binary
+          description: ''
+  /api/mcr/reviews/{id}/status/:
+    get:
+      operationId: api_mcr_reviews_status_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/mcr/reviews/{id}/summary_json/:
+    get:
+      operationId: api_mcr_reviews_summary_json_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /openapi/schema/:
+    get:
+      operationId: openapi_schema_retrieve
+      description: |-
+        OpenApi3 schema for this API. Format can be selected via content negotiation.
+
+        - YAML: application/vnd.oai.openapi
+        - JSON: application/vnd.oai.openapi+json
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - json
+          - yaml
+      - in: query
+        name: lang
+        schema:
+          type: string
+          enum:
+          - af
+          - ar
+          - ar-dz
+          - ast
+          - az
+          - be
+          - bg
+          - bn
+          - br
+          - bs
+          - ca
+          - ckb
+          - cs
+          - cy
+          - da
+          - de
+          - dsb
+          - el
+          - en
+          - en-au
+          - en-gb
+          - eo
+          - es
+          - es-ar
+          - es-co
+          - es-mx
+          - es-ni
+          - es-ve
+          - et
+          - eu
+          - fa
+          - fi
+          - fr
+          - fy
+          - ga
+          - gd
+          - gl
+          - he
+          - hi
+          - hr
+          - hsb
+          - ht
+          - hu
+          - hy
+          - ia
+          - id
+          - ig
+          - io
+          - is
+          - it
+          - ja
+          - ka
+          - kab
+          - kk
+          - km
+          - kn
+          - ko
+          - ky
+          - lb
+          - lt
+          - lv
+          - mk
+          - ml
+          - mn
+          - mr
+          - ms
+          - my
+          - nb
+          - ne
+          - nl
+          - nn
+          - os
+          - pa
+          - pl
+          - pt
+          - pt-br
+          - ro
+          - ru
+          - sk
+          - sl
+          - sq
+          - sr
+          - sr-latn
+          - sv
+          - sw
+          - ta
+          - te
+          - tg
+          - th
+          - tk
+          - tr
+          - tt
+          - udm
+          - ug
+          - uk
+          - ur
+          - uz
+          - vi
+          - zh-hans
+          - zh-hant
+      tags:
+      - openapi
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/vnd.oai.openapi:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/yaml:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/vnd.oai.openapi+json:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+components:
+  schemas:
+    BookingSession:
+      type: object
+      properties:
+        id:
+          type: integer
+        case_owner_id:
+          type: integer
+          nullable: true
+        day_date:
+          type: string
+          format: date
+          nullable: true
+        booking_id:
+          type: string
+          nullable: true
+        service_name:
+          type: string
+          nullable: true
+        meeting_subject:
+          type: string
+          nullable: true
+        customer_name:
+          type: string
+          nullable: true
+        customer_email:
+          type: string
+          nullable: true
+        duration_seconds:
+          type: integer
+          nullable: true
+        total_participant_count:
+          type: integer
+          nullable: true
+        staff_names:
+          type: string
+          nullable: true
+        staff_emails:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          nullable: true
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+      - id
+    DashboardMcrReviewDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+        date:
+          type: string
+          format: date
+          nullable: true
+        programme:
+          type: string
+          default: ''
+        group:
+          type: string
+          default: ''
+        meeting_link:
+          type: string
+          default: ''
+        total_duration_min:
+          type: integer
+          default: 0
+        coach_name:
+          type: string
+          default: ''
+        learner_name:
+          type: string
+          default: ''
+        rag_status:
+          type: string
+          default: amber
+        qualitative_rating:
+          type: string
+          default: ''
+        created_at:
+          type: string
+          format: date-time
+          nullable: true
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+        safeguarding_flagged:
+          type: boolean
+          default: false
+        satisfaction_score:
+          type: integer
+          nullable: true
+        executive_summary:
+          type: string
+          default: ''
+        strengths:
+          type: array
+          items:
+            type: string
+        priority_actions: {}
+        overall_rating: {}
+        qa: {}
+        booking_id:
+          type: string
+          nullable: true
+        status:
+          type: string
+        summary_text_raw:
+          type: string
+          default: ''
+        summary_text_json:
+          nullable: true
+        summary_json:
+          nullable: true
+      required:
+      - id
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid
