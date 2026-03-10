@@ -21,34 +21,35 @@ __pycache__/
 *.py[cod]
 
 # Python backend (Django)
-MCR-Backend/.venv/
-MCR-Backend/venv/
-MCR-Backend/**/__pycache__/
-MCR-Backend/**/*.py[cod]
-MCR-Backend/.pytest_cache/
-MCR-Backend/.mypy_cache/
-MCR-Backend/.ruff_cache/
-MCR-Backend/.coverage
-MCR-Backend/htmlcov/
-MCR-Backend/db.sqlite3
-MCR-Backend/staticfiles/
-MCR-Backend/media/
-MCR-Backend/.env
-MCR-Backend/.env.*
-!MCR-Backend/.env.example
+Backend/.venv/
+Backend/venv/
+Backend/**/__pycache__/
+Backend/**/*.py[cod]
+Backend/.pytest_cache/
+Backend/.mypy_cache/
+Backend/.ruff_cache/
+Backend/.coverage
+Backend/htmlcov/
+Backend/db.sqlite3
+Backend/staticfiles/
+Backend/media/
+Backend/.env
+Backend/.env.*
+!Backend/.env.example
 
 # Node frontend (Vite)
-MCR-Frontend/node_modules/
-MCR-Frontend/dist/
-MCR-Frontend/out/
-MCR-Frontend/.vite/
-MCR-Frontend/.cache/
-MCR-Frontend/coverage/
-MCR-Frontend/*.tsbuildinfo
-MCR-Frontend/.eslintcache
-MCR-Frontend/.env
-MCR-Frontend/.env.*
-!MCR-Frontend/.env.example
+Frontend/node_modules/
+Frontend/dist/
+Frontend/out/
+Frontend/.vite/
+Frontend/.cache/
+Frontend/coverage/
+Frontend/*.tsbuildinfo
+Frontend/.eslintcache
+Frontend/.env
+Frontend/.env.*
+!Frontend/.env.example
+Frontend/tmp-print-page.js
 
 # Temp files
 *.tmp
