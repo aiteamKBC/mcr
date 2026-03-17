@@ -119,7 +119,7 @@ export default function McrReviewPrint() {
       ? qaIndicators.reduce((sum, indicator) => sum + toNumber(indicator.score0to5, 0), 0) / qaIndicators.length
       : 0;
   const satisfactionScore = toNumber(review.satisfaction?.score0to5 ?? review.satisfactionScore, 0);
-  const printedAtLabel = format(new Date(), 'yyyy-MM-dd HH:mm');
+  const lectureDateLabel = formatDateSafe(review.date, 'yyyy-MM-dd');
 
   return (
     <div className="min-h-screen bg-zinc-100 py-8 print:bg-white print:py-0">
@@ -217,8 +217,8 @@ export default function McrReviewPrint() {
                   <td className="border border-zinc-200 bg-zinc-50 px-2 py-1">{groupName}</td>
                 </tr>
                 <tr>
-                  <td className="border border-zinc-200 bg-zinc-100 px-2 py-1 text-zinc-700">Printed At (PDF)</td>
-                  <td className="border border-zinc-200 bg-zinc-50 px-2 py-1">{printedAtLabel}</td>
+                  <td className="border border-zinc-200 bg-zinc-100 px-2 py-1 text-zinc-700">Meeting Date</td>
+                  <td className="border border-zinc-200 bg-zinc-50 px-2 py-1">{lectureDateLabel}</td>
                 </tr>
               </tbody>
             </table>
