@@ -12,7 +12,7 @@ Object.keys(modules).forEach((path) => {
       messages[lang] = { translation: {} };
     }
     
-    // 合并翻译内容
+    // åˆå¹¶ç¿»è¯‘å†…å®¹
     if (module.default) {
       messages[lang].translation = {
         ...messages[lang].translation,

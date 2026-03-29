@@ -1,4 +1,4 @@
-﻿import { 
+import { 
   ReportRecord, 
   ReportStats, 
   ReportFilters,

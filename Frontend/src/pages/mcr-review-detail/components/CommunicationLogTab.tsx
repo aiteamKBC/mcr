@@ -9,21 +9,22 @@ interface CommunicationLogTabProps {
 }
 
 const recipientConfig: Record<string, { icon: string; bg: string; text: string; border: string; label: string }> = {
-  Employer: { icon: 'ri-building-line',      bg: 'bg-sky-50',    text: 'text-sky-700',    border: 'border-sky-200',    label: 'Employer' },
+  Employer: { icon: 'ri-building-line',      bg: 'bg-blue-50',    text: 'text-blue-700',    border: 'border-blue-200',    label: 'Employer' },
   Learner:  { icon: 'ri-user-line',          bg: 'bg-violet-50', text: 'text-violet-700', border: 'border-violet-200', label: 'Learner' },
-  QA:       { icon: 'ri-shield-check-line',  bg: 'bg-teal-50',   text: 'text-teal-700',   border: 'border-teal-200',   label: 'QA System' },
+  QA:       { icon: 'ri-shield-check-line',  bg: 'bg-indigo-50',   text: 'text-indigo-700',   border: 'border-indigo-200',   label: 'QA System' },
 };
 
 const statusConfig: Record<string, { bg: string; text: string; border: string; icon: string }> = {
   Sent:      { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200', icon: 'ri-check-double-line' },
   Pending:   { bg: 'bg-amber-50',   text: 'text-amber-700',   border: 'border-amber-200',   icon: 'ri-time-line' },
   Failed:    { bg: 'bg-red-50',     text: 'text-red-700',     border: 'border-red-200',     icon: 'ri-error-warning-line' },
-  Delivered: { bg: 'bg-teal-50',    text: 'text-teal-700',    border: 'border-teal-200',    icon: 'ri-mail-check-line' },
+  Delivered: { bg: 'bg-indigo-50',    text: 'text-indigo-700',    border: 'border-indigo-200',    icon: 'ri-mail-check-line' },
 };
 
 export default function CommunicationLogTab({ review }: CommunicationLogTabProps) {
   const [showModal, setShowModal] = useState(false);
   const log = review.communicationLog ?? [];
+  const coachName = typeof review.coach === 'string' ? review.coach : review.coach.name;
 
   const employerCount = log.filter((e) => e.recipientType === 'Employer').length;
   const learnerCount  = log.filter((e) => e.recipientType === 'Learner').length;
@@ -33,13 +34,13 @@ export default function CommunicationLogTab({ review }: CommunicationLogTabProps
   return (
     <div className="space-y-5">
 
-      {/* ── KPI Row ── */}
+      {/* â”€â”€ KPI Row â”€â”€ */}
       <div className="grid grid-cols-4 gap-4">
         {[
           { label: 'Total Entries', value: log.length,      color: 'text-gray-800',    bg: 'bg-gray-50',    border: 'border-gray-100' },
-          { label: 'Employer',      value: employerCount,   color: 'text-sky-700',     bg: 'bg-sky-50',     border: 'border-sky-100' },
+          { label: 'Employer',      value: employerCount,   color: 'text-blue-700',     bg: 'bg-blue-50',     border: 'border-blue-100' },
           { label: 'Learner',       value: learnerCount,    color: 'text-violet-700',  bg: 'bg-violet-50',  border: 'border-violet-100' },
-          { label: 'QA System',     value: qaCount,         color: 'text-teal-700',    bg: 'bg-teal-50',    border: 'border-teal-100' },
+          { label: 'QA System',     value: qaCount,         color: 'text-indigo-700',    bg: 'bg-indigo-50',    border: 'border-indigo-100' },
         ].map((k) => (
           <div key={k.label} className={`rounded-xl border ${k.border} ${k.bg} px-4 py-3 text-center`}>
             <p className={`text-2xl font-black ${k.color}`}>{k.value}</p>
@@ -48,16 +49,16 @@ export default function CommunicationLogTab({ review }: CommunicationLogTabProps
         ))}
       </div>
 
-      {/* ── Log List ── */}
+      {/* â”€â”€ Log List â”€â”€ */}
       <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
-          <i className="ri-mail-line text-teal-500"></i>
+          <i className="ri-mail-line text-indigo-500"></i>
           <h3 className="text-sm font-bold text-gray-900">Communication Timeline</h3>
           <span className="ml-auto flex items-center gap-2">
             <span className="text-xs text-gray-400">{sentCount} sent successfully</span>
             <button
               onClick={() => setShowModal(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-teal-500 hover:bg-teal-600 text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer whitespace-nowrap"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-500 hover:bg-indigo-600 text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer whitespace-nowrap"
             >
               <i className="ri-add-line text-xs"></i>
               Add Entry
@@ -88,7 +89,7 @@ export default function CommunicationLogTab({ review }: CommunicationLogTabProps
                         </p>
                         <p className="text-xs text-gray-400 mt-0.5">
                           {format(new Date(entry.sentAt), 'dd MMM yyyy, HH:mm')}
-                          {' · '}
+                          {' Â· '}
                           Sent by <span className="font-medium text-gray-600">{entry.sentBy}</span>
                         </p>
                       </div>
@@ -117,7 +118,7 @@ export default function CommunicationLogTab({ review }: CommunicationLogTabProps
             <p className="text-xs text-gray-400 mt-1 mb-4">No communications have been sent for this review.</p>
             <button
               onClick={() => setShowModal(true)}
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer whitespace-nowrap"
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer whitespace-nowrap"
             >
               <i className="ri-mail-send-line text-xs"></i>
               Send First Communication
@@ -126,7 +127,7 @@ export default function CommunicationLogTab({ review }: CommunicationLogTabProps
         )}
       </div>
 
-      {/* ── Recipient Breakdown ── */}
+      {/* â”€â”€ Recipient Breakdown â”€â”€ */}
       {log.length > 0 && (
         <div className="grid grid-cols-3 gap-4">
           {[
@@ -147,13 +148,15 @@ export default function CommunicationLogTab({ review }: CommunicationLogTabProps
         </div>
       )}
 
-      {/* ── Modal ── */}
+      {/* â”€â”€ Modal â”€â”€ */}
       {showModal && (
         <CommunicationModal
           reviewId={review.id}
+          coachName={coachName}
           onClose={() => setShowModal(false)}
         />
       )}
     </div>
   );
 }
+

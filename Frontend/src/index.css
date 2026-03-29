@@ -1,4 +1,4 @@
-﻿@tailwind base;
+@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
@@ -9,5 +9,27 @@
     -webkit-user-select: text;
     -moz-user-select: text;
     user-select: text;
+  }
+}
+
+@media print {
+  html,
+  body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    color-adjust: exact;
+    background: #fff !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .report-sheet {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 auto !important;
+    border: 0 !important;
+    box-shadow: none !important;
   }
 }

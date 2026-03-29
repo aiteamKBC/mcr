@@ -6,7 +6,7 @@ interface KsbEvidenceTabProps {
 }
 
 const ksbColors: Record<string, { bg: string; text: string; border: string }> = {
-  K: { bg: 'bg-sky-50',    text: 'text-sky-700',    border: 'border-sky-200' },
+  K: { bg: 'bg-blue-50',    text: 'text-blue-700',    border: 'border-blue-200' },
   S: { bg: 'bg-violet-50', text: 'text-violet-700', border: 'border-violet-200' },
   B: { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200' },
 };
@@ -22,13 +22,13 @@ export default function KsbEvidenceTab({ review }: KsbEvidenceTabProps) {
   return (
     <div className="space-y-5">
 
-      {/* ── KPI Row ── */}
+      {/* â”€â”€ KPI Row â”€â”€ */}
       <div className="grid grid-cols-5 gap-4">
         {[
           { label: 'Total Items', value: items.length,  color: 'text-gray-800',    bg: 'bg-gray-50',    border: 'border-gray-100' },
           { label: 'Verified',    value: verified,       color: 'text-emerald-700', bg: 'bg-emerald-50', border: 'border-emerald-100' },
           { label: 'Pending',     value: pending,        color: 'text-amber-700',   bg: 'bg-amber-50',   border: 'border-amber-100' },
-          { label: 'Knowledge',   value: kCount,         color: 'text-sky-700',     bg: 'bg-sky-50',     border: 'border-sky-100' },
+          { label: 'Knowledge',   value: kCount,         color: 'text-blue-700',     bg: 'bg-blue-50',     border: 'border-blue-100' },
           { label: 'Skills',      value: sCount,         color: 'text-violet-700',  bg: 'bg-violet-50',  border: 'border-violet-100' },
         ].map((k) => (
           <div key={k.label} className={`rounded-xl border ${k.border} ${k.bg} px-4 py-3 text-center`}>
@@ -38,11 +38,11 @@ export default function KsbEvidenceTab({ review }: KsbEvidenceTabProps) {
         ))}
       </div>
 
-      {/* ── Evidence Table ── */}
+      {/* â”€â”€ Evidence Table â”€â”€ */}
       {items.length > 0 ? (
         <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
-            <i className="ri-file-list-line text-teal-500"></i>
+            <i className="ri-file-list-line text-indigo-500"></i>
             <h3 className="text-sm font-bold text-gray-900">Evidence Items</h3>
             <span className="ml-auto text-xs text-gray-400">{items.length} items</span>
           </div>
@@ -64,8 +64,8 @@ export default function KsbEvidenceTab({ review }: KsbEvidenceTabProps) {
                     {/* Title */}
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 bg-teal-50 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <i className="ri-file-text-line text-teal-600 text-sm"></i>
+                        <div className="w-8 h-8 bg-indigo-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <i className="ri-file-text-line text-indigo-600 text-sm"></i>
                         </div>
                         <span className="font-semibold text-gray-800 text-sm leading-snug">{item.title}</span>
                       </div>
@@ -109,7 +109,7 @@ export default function KsbEvidenceTab({ review }: KsbEvidenceTabProps) {
                     <td className="px-5 py-4">
                       <div className="flex flex-wrap gap-1">
                         {item.epaTopics.map((topic, i) => (
-                          <span key={i} className="px-2 py-0.5 bg-teal-50 text-teal-700 border border-teal-100 rounded-md text-xs font-medium whitespace-nowrap">
+                          <span key={i} className="px-2 py-0.5 bg-indigo-50 text-indigo-700 border border-indigo-100 rounded-md text-xs font-medium whitespace-nowrap">
                             {topic}
                           </span>
                         ))}
@@ -126,15 +126,15 @@ export default function KsbEvidenceTab({ review }: KsbEvidenceTabProps) {
                               href={link}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="w-7 h-7 bg-gray-100 hover:bg-teal-50 rounded-lg flex items-center justify-center transition-colors cursor-pointer"
+                              className="w-7 h-7 bg-gray-100 hover:bg-indigo-50 rounded-lg flex items-center justify-center transition-colors cursor-pointer"
                               title="View evidence"
                             >
-                              <i className="ri-external-link-line text-gray-500 hover:text-teal-600 text-xs"></i>
+                              <i className="ri-external-link-line text-gray-500 hover:text-indigo-600 text-xs"></i>
                             </a>
                           ))}
                         </div>
                       ) : (
-                        <span className="text-xs text-gray-300">—</span>
+                        <span className="text-xs text-gray-300">-</span>
                       )}
                     </td>
                   </tr>
@@ -153,7 +153,7 @@ export default function KsbEvidenceTab({ review }: KsbEvidenceTabProps) {
         </div>
       )}
 
-      {/* ── KSB Summary Cards ── */}
+      {/* â”€â”€ KSB Summary Cards â”€â”€ */}
       {items.length > 0 && (
         <div className="grid grid-cols-3 gap-4">
           {[
@@ -177,3 +177,4 @@ export default function KsbEvidenceTab({ review }: KsbEvidenceTabProps) {
     </div>
   );
 }
+

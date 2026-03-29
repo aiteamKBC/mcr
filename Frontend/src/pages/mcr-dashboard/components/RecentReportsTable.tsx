@@ -138,7 +138,7 @@ export default function RecentReportsTable({ reports, isLoading }: RecentReports
                 setPageSize(Number(e.target.value));
                 setCurrentPage(1);
               }}
-              className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
+              className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
             >
               <option value={10}>10 per page</option>
               <option value={25}>25 per page</option>
@@ -161,7 +161,7 @@ export default function RecentReportsTable({ reports, isLoading }: RecentReports
                 >
                   <div className="flex items-center gap-1.5">
                     Status
-                    <i className={`ri-arrow-${sortField === 'status' && sortDirection === 'asc' ? 'up' : 'down'}-s-line text-sm ${sortField === 'status' ? 'text-teal-600' : 'text-gray-400'}`}></i>
+                    <i className={`ri-arrow-${sortField === 'status' && sortDirection === 'asc' ? 'up' : 'down'}-s-line text-sm ${sortField === 'status' ? 'text-indigo-600' : 'text-gray-400'}`}></i>
                   </div>
                 </th>
                 <th
@@ -170,7 +170,7 @@ export default function RecentReportsTable({ reports, isLoading }: RecentReports
                 >
                   <div className="flex items-center gap-1.5">
                     RAG
-                    <i className={`ri-arrow-${sortField === 'rag' && sortDirection === 'asc' ? 'up' : 'down'}-s-line text-sm ${sortField === 'rag' ? 'text-teal-600' : 'text-gray-400'}`}></i>
+                    <i className={`ri-arrow-${sortField === 'rag' && sortDirection === 'asc' ? 'up' : 'down'}-s-line text-sm ${sortField === 'rag' ? 'text-indigo-600' : 'text-gray-400'}`}></i>
                   </div>
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
@@ -191,7 +191,7 @@ export default function RecentReportsTable({ reports, isLoading }: RecentReports
                 >
                   <div className="flex items-center gap-1.5">
                     Created At
-                    <i className={`ri-arrow-${sortField === 'created_at' && sortDirection === 'asc' ? 'up' : 'down'}-s-line text-sm ${sortField === 'created_at' ? 'text-teal-600' : 'text-gray-400'}`}></i>
+                    <i className={`ri-arrow-${sortField === 'created_at' && sortDirection === 'asc' ? 'up' : 'down'}-s-line text-sm ${sortField === 'created_at' ? 'text-indigo-600' : 'text-gray-400'}`}></i>
                   </div>
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
@@ -275,7 +275,7 @@ export default function RecentReportsTable({ reports, isLoading }: RecentReports
                           disabled={!report.report_html}
                           className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors whitespace-nowrap ${
                             report.report_html
-                              ? 'bg-teal-50 text-teal-700 hover:bg-teal-100 cursor-pointer'
+                              ? 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100 cursor-pointer'
                               : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                           }`}
                         >
@@ -293,7 +293,7 @@ export default function RecentReportsTable({ reports, isLoading }: RecentReports
                             {report.summary_json?.executive_summary && (
                               <div className="bg-white rounded-lg border border-gray-200 p-5">
                                 <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                                  <i className="ri-file-text-line text-teal-600"></i>
+                                  <i className="ri-file-text-line text-indigo-600"></i>
                                   Executive Summary
                                 </h4>
                                 <p className="text-sm text-gray-700 leading-relaxed">
@@ -354,7 +354,7 @@ export default function RecentReportsTable({ reports, isLoading }: RecentReports
                             {report.summary_json?.qa && report.summary_json.qa.length > 0 && (
                               <div className="bg-white rounded-lg border border-gray-200 p-5">
                                 <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                                  <i className="ri-bar-chart-box-line text-blue-600"></i>
+                                  <i className="ri-bar-chart-box-line text-indigo-600"></i>
                                   QA Metrics
                                 </h4>
                                 <div className="overflow-x-auto">
@@ -451,7 +451,7 @@ export default function RecentReportsTable({ reports, isLoading }: RecentReports
                       onClick={() => setCurrentPage(page)}
                       className={`w-10 h-10 flex items-center justify-center text-sm font-medium rounded-lg transition-colors cursor-pointer ${
                         currentPage === page
-                          ? 'bg-teal-600 text-white'
+                          ? 'bg-indigo-600 text-white'
                           : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
                       }`}
                     >

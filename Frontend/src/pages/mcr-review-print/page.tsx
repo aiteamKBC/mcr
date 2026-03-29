@@ -1,7 +1,8 @@
-﻿import { useParams } from 'react-router-dom';
+import { useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { getReviewById } from '../../utils/mcrApiClient';
 import { format } from 'date-fns';
+import { getReviewById } from '../../utils/mcrApiClient';
 
 const textOrDash = (value: unknown, fallback = '-'): string => {
   const raw = String(value ?? '').trim();
@@ -28,18 +29,26 @@ const normaliseCriterionName = (value: unknown): string => {
 
 const ragTextClass = (status: string): string => {
   const value = status.toLowerCase();
-  if (value === 'green') return 'text-green-700';
+  if (value === 'green') return 'text-emerald-700';
   if (value === 'amber') return 'text-amber-700';
-  if (value === 'red') return 'text-red-700';
-  return 'text-zinc-700';
+  if (value === 'red') return 'text-rose-700';
+  return 'text-slate-700';
+};
+
+const ragBadgeClass = (status: string): string => {
+  const value = status.toLowerCase();
+  if (value === 'green') return 'border-emerald-200 bg-emerald-50 text-emerald-700';
+  if (value === 'amber') return 'border-amber-200 bg-amber-50 text-amber-700';
+  if (value === 'red') return 'border-rose-200 bg-rose-50 text-rose-700';
+  return 'border-slate-200 bg-slate-50 text-slate-700';
 };
 
 const triStateBadgeClass = (status: string): string => {
   const value = status.toLowerCase();
-  if (value === 'met') return 'bg-green-100 text-green-800';
+  if (value === 'met') return 'bg-emerald-100 text-emerald-800';
   if (value === 'partially met') return 'bg-amber-100 text-amber-800';
-  if (value === 'not met') return 'bg-red-100 text-red-800';
-  return 'bg-zinc-100 text-zinc-700';
+  if (value === 'not met') return 'bg-rose-100 text-rose-800';
+  return 'bg-slate-100 text-slate-700';
 };
 
 const scoreToPercent = (scoreOutOfFive: number): number => {
@@ -69,6 +78,115 @@ const formatVarianceWithPercent = (variance: number, planned: number): string =>
   return `${varianceLabel} (${percentLabel})`;
 };
 
+const sanitizeFilePart = (value: string): string =>
+  value
+    .trim()
+    .replace(/[<>:"/\\|?*\u0000-\u001F]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/ /g, '_');
+
+const PRINT_PAGE_HEIGHT_PX = Math.round((297 - 16) * 3.7795275591);
+
+function SectionBlock({
+  title,
+  subtitle,
+  children,
+  className = '',
+  keepTogether = false,
+  printStartThreshold,
+  printBreakCandidate = true,
+}: {
+  title: string;
+  subtitle?: string;
+  children: React.ReactNode;
+  className?: string;
+  keepTogether?: boolean;
+  printStartThreshold?: number;
+  printBreakCandidate?: boolean;
+}) {
+  return (
+    <section
+      className={`report-section ${printBreakCandidate ? 'print-break-candidate' : ''} overflow-hidden rounded-[22px] border border-slate-200 bg-white ${keepTogether ? 'report-section-keep' : ''} ${className}`}
+      data-print-start-threshold={printStartThreshold}
+    >
+      <div className="border-b border-slate-200 bg-slate-50 px-5 py-4">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h2 className="text-[15px] font-semibold text-slate-900">{title}</h2>
+            {subtitle ? <p className="mt-1 text-[11px] text-slate-500">{subtitle}</p> : null}
+          </div>
+        </div>
+      </div>
+      <div className="px-5 py-4">{children}</div>
+    </section>
+  );
+}
+
+function DetailCard({
+  label,
+  value,
+  hint,
+}: {
+  label: string;
+  value: string;
+  hint?: string;
+}) {
+  return (
+    <div className="report-card rounded-[18px] border border-slate-200 bg-slate-50/90 px-4 py-3">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">{label}</p>
+      <p className="mt-2 text-[13px] font-semibold leading-5 text-slate-900">{value}</p>
+      {hint ? <p className="mt-1 text-[10px] text-slate-500">{hint}</p> : null}
+    </div>
+  );
+}
+
+function MetricCard({
+  label,
+  value,
+  caption,
+}: {
+  label: string;
+  value: string;
+  caption?: string;
+}) {
+  return (
+    <div className="report-metric rounded-[18px] border border-indigo-100 bg-gradient-to-br from-white to-indigo-50 px-4 py-4">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-indigo-400">{label}</p>
+      <p className="mt-2 text-[18px] font-bold text-slate-900">{value}</p>
+      {caption ? <p className="mt-1 text-[10px] text-slate-500">{caption}</p> : null}
+    </div>
+  );
+}
+
+function applyPrintSectionBreaks() {
+  const sections = Array.from(document.querySelectorAll<HTMLElement>('.print-break-candidate'));
+  const sheet = document.querySelector<HTMLElement>('.report-sheet');
+  if (!sheet || sections.length === 0) return;
+
+  sections.forEach((section) => section.classList.remove('print-force-break'));
+
+  const sheetTop = sheet.getBoundingClientRect().top + window.scrollY;
+
+  sections.forEach((section) => {
+    const sectionTop = section.getBoundingClientRect().top + window.scrollY - sheetTop;
+    const sectionHeight = section.offsetHeight;
+    const pageOffset = ((sectionTop % PRINT_PAGE_HEIGHT_PX) + PRINT_PAGE_HEIGHT_PX) % PRINT_PAGE_HEIGHT_PX;
+    const remainingOnPage = PRINT_PAGE_HEIGHT_PX - pageOffset;
+    const configuredThreshold = Number(section.dataset.printStartThreshold || 0);
+    const requiredStartSpace =
+      configuredThreshold > 0
+        ? configuredThreshold
+        : section.classList.contains('report-section-keep')
+          ? Math.min(sectionHeight + 12, PRINT_PAGE_HEIGHT_PX)
+          : Math.min(Math.max(220, Math.round(sectionHeight * 0.2)), 320);
+
+    if (remainingOnPage < requiredStartSpace && pageOffset > 0) {
+      section.classList.add('print-force-break');
+    }
+  });
+}
+
 export default function McrReviewPrint() {
   const { id } = useParams<{ id: string }>();
 
@@ -82,7 +200,7 @@ export default function McrReviewPrint() {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
-          <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-teal-500 border-t-transparent"></div>
+          <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-indigo-500 border-t-transparent"></div>
           <p className="text-gray-600">Loading review for print...</p>
         </div>
       </div>
@@ -107,32 +225,93 @@ export default function McrReviewPrint() {
   };
 
   const ragLabel = textOrDash(review.ragStatus);
+  const qualitativeLabel = textOrDash(summary.overallRating || review.qualitativeRating);
   const totalPlannedMin = meetingSections.reduce((sum, section) => sum + toNumber(section.plannedMin, 0), 0);
   const totalActualMin =
     meetingSections.length > 0
       ? meetingSections.reduce((sum, section) => sum + toNumber(section.actualMin, 0), 0)
       : toNumber(review.totalDurationMin, 0);
+  const durationVariance = totalActualMin - totalPlannedMin;
   const overallQaScore =
     toNumber(review.overallQaScore, 0) > 0
       ? toNumber(review.overallQaScore, 0)
       : qaIndicators.length > 0
-      ? qaIndicators.reduce((sum, indicator) => sum + toNumber(indicator.score0to5, 0), 0) / qaIndicators.length
-      : 0;
+        ? qaIndicators.reduce((sum, indicator) => sum + toNumber(indicator.score0to5, 0), 0) / qaIndicators.length
+        : 0;
   const satisfactionScore = toNumber(review.satisfaction?.score0to5 ?? review.satisfactionScore, 0);
-  const lectureDateLabel = formatDateSafe(review.date, 'yyyy-MM-dd');
+  const safeguardingCompletion =
+    safeguardingChecklist.length > 0
+      ? Math.round(
+          (safeguardingChecklist.filter((item) => item.status.toLowerCase() === 'met').length /
+            safeguardingChecklist.length) *
+            100
+        )
+      : 0;
+  const lectureDateLabel = formatDateSafe(
+    review.meetingStartsAt || review.meetingDayDate || review.date,
+    'yyyy-MM-dd'
+  );
+  useEffect(() => {
+    const previousTitle = document.title;
+    const filename = [
+      'MCR',
+      sanitizeFilePart(coachName || 'Coach'),
+      'with',
+      sanitizeFilePart(learnerName || 'Learner'),
+      sanitizeFilePart(lectureDateLabel || 'Date'),
+    ]
+      .filter(Boolean)
+      .join('_');
+
+    document.title = filename;
+
+    return () => {
+      document.title = previousTitle;
+    };
+  }, [coachName, learnerName, lectureDateLabel]);
+
+  useEffect(() => {
+    const preparePrintLayout = () => {
+      window.requestAnimationFrame(() => {
+        applyPrintSectionBreaks();
+      });
+    };
+
+    preparePrintLayout();
+    window.addEventListener('beforeprint', preparePrintLayout);
+    window.addEventListener('resize', preparePrintLayout);
+
+    return () => {
+      window.removeEventListener('beforeprint', preparePrintLayout);
+      window.removeEventListener('resize', preparePrintLayout);
+    };
+  }, [review]);
+
+  const handlePrint = () => {
+    applyPrintSectionBreaks();
+    window.requestAnimationFrame(() => {
+      window.print();
+    });
+  };
 
   return (
-    <div className="min-h-screen bg-zinc-100 py-8 print:bg-white print:py-0">
+    <div className="min-h-screen bg-slate-100 py-8 print:bg-white print:py-0">
       <style>{`
         @page {
           size: A4;
-          margin: 12mm;
+          margin: 8mm;
         }
         .report-sheet,
         .report-sheet * {
           -webkit-user-select: text !important;
           -moz-user-select: text !important;
           user-select: text !important;
+        }
+        thead {
+          display: table-header-group;
+        }
+        tfoot {
+          display: table-footer-group;
         }
         @media print {
           body {
@@ -141,15 +320,11 @@ export default function McrReviewPrint() {
           }
           .report-sheet {
             margin: 0 auto;
-            border: 0;
-            box-shadow: none;
             width: 100%;
-            max-width: none;
           }
           .no-print {
             display: none !important;
           }
-          /* Hide browser extensions / floating chat widgets in PDF output */
           body > :not(#root),
           iframe,
           [id*='chat'],
@@ -161,24 +336,52 @@ export default function McrReviewPrint() {
             display: none !important;
             visibility: hidden !important;
           }
-          tr, td, th {
+          tr {
             page-break-inside: avoid;
           }
-          .page-break {
+          .report-card,
+          .report-metric {
+            break-inside: avoid-page;
+          }
+          .report-section-keep {
+            display: block;
+            width: 100%;
+            break-inside: avoid-page;
+            page-break-inside: avoid;
+            page-break-before: auto;
+            page-break-after: auto;
+          }
+          .report-section-keep > div {
+            break-inside: avoid-page;
+            page-break-inside: avoid;
+          }
+          .report-section {
+            break-inside: auto;
+            page-break-inside: auto;
+          }
+          .print-force-break {
             page-break-before: always;
+            break-before: page;
+            margin-top: 20px !important;
+          }
+          .report-section table {
+            margin: 0;
+          }
+          .page-break {
+            page-break-before: auto;
           }
         }
       `}</style>
 
-      <div className="report-sheet mx-auto w-full max-w-[210mm] border border-zinc-300 bg-white shadow-sm print:shadow-none">
-        <div className="px-8 py-7 text-[12px] leading-[1.45] text-zinc-900">
-          <header className="mb-4 border border-zinc-200 bg-zinc-100 px-3 py-2">
-            <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3">
-              <div className="flex items-center gap-2">
+      <div className="report-sheet mx-auto w-full max-w-[210mm] overflow-hidden rounded-[30px] border border-slate-300 bg-white shadow-sm">
+        <div className="px-8 py-7 text-[12px] leading-[1.5] text-slate-900">
+          <header className="overflow-hidden rounded-[24px] border border-slate-200 bg-white">
+            <div className="grid grid-cols-[auto_1fr_auto] items-center gap-4 px-6 py-5">
+              <div className="flex items-center justify-center rounded-[18px] border border-slate-200 bg-slate-50 px-3 py-2">
                 <img
                   src="/kent-business-college-logo.png"
                   alt="Kent Business College logo"
-                  className="h-24 w-auto object-contain"
+                  className="h-20 w-auto object-contain"
                   onError={({ currentTarget }) => {
                     if (!currentTarget.src.includes('kent-business-college-logo.svg')) {
                       currentTarget.src = '/kent-business-college-logo.svg';
@@ -186,243 +389,315 @@ export default function McrReviewPrint() {
                   }}
                 />
               </div>
-              <h1 className="text-[24px] font-semibold text-zinc-900">Monthly Coaching Review (MCR)</h1>
-              <p className="text-[11px]">
-                RAG: <span className={`font-semibold ${ragTextClass(ragLabel)}`}>{ragLabel}</span>
-              </p>
+
+              <div>
+                <h1 className="text-[24px] font-semibold leading-tight text-slate-900">Monthly Coaching Review</h1>
+              </div>
+
+              <div className="space-y-2 text-right">
+                <div className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold ${ragBadgeClass(ragLabel)}`}>
+                  RAG: {ragLabel}
+                </div>
+              </div>
             </div>
           </header>
 
-          <section className="mb-5">
-            <table className="w-full border-collapse text-[11px]">
-              <tbody>
-                <tr>
-                  <td className="w-[22%] border border-zinc-200 bg-zinc-100 px-2 py-1 text-zinc-700">Learner</td>
-                  <td className="w-[78%] border border-zinc-200 bg-zinc-50 px-2 py-1">{learnerName}</td>
-                </tr>
-                <tr>
-                  <td className="border border-zinc-200 bg-zinc-100 px-2 py-1 text-zinc-700">Coach</td>
-                  <td className="border border-zinc-200 bg-zinc-50 px-2 py-1">{coachName}</td>
-                </tr>
-                <tr>
-                  <td className="border border-zinc-200 bg-zinc-100 px-2 py-1 text-zinc-700">Duration</td>
-                  <td className="border border-zinc-200 bg-zinc-50 px-2 py-1">{toNumber(review.totalDurationMin, 0)} minutes</td>
-                </tr>
-                <tr>
-                  <td className="border border-zinc-200 bg-zinc-100 px-2 py-1 text-zinc-700">Programme</td>
-                  <td className="border border-zinc-200 bg-zinc-50 px-2 py-1">{programmeName}</td>
-                </tr>
-                <tr>
-                  <td className="border border-zinc-200 bg-zinc-100 px-2 py-1 text-zinc-700">Group</td>
-                  <td className="border border-zinc-200 bg-zinc-50 px-2 py-1">{groupName}</td>
-                </tr>
-                <tr>
-                  <td className="border border-zinc-200 bg-zinc-100 px-2 py-1 text-zinc-700">Meeting Date</td>
-                  <td className="border border-zinc-200 bg-zinc-50 px-2 py-1">{lectureDateLabel}</td>
-                </tr>
-              </tbody>
-            </table>
+          <section className="mt-5 grid grid-cols-2 gap-3">
+            <DetailCard label="Learner" value={learnerName} />
+            <DetailCard label="Coach" value={coachName} />
+            <DetailCard label="Programme" value={programmeName} />
+            <DetailCard label="Group" value={groupName} />
+            <DetailCard label="Meeting Date" value={lectureDateLabel} />
+            <DetailCard label="Duration" value={`${toNumber(review.totalDurationMin, 0)} minutes`} hint={qualitativeLabel} />
           </section>
 
-          <section className="mb-4">
-            <h2 className="mb-1 text-[15px] font-semibold">Executive Summary</h2>
-            <p>{textOrDash(summary.executiveSummary, 'No executive summary recorded.')}</p>
+          <section className="mt-5 grid grid-cols-4 gap-3">
+            <MetricCard
+              label="Overall QA Score"
+              value={formatScoreWithPercent(overallQaScore)}
+              caption={`${qaIndicators.length} indicators scored`}
+            />
+            <MetricCard
+              label="Learner Satisfaction"
+              value={formatScoreWithPercent(satisfactionScore)}
+              caption="APTEM learner rating"
+            />
+            <MetricCard
+              label="Safeguarding Completion"
+              value={`${safeguardingCompletion}%`}
+              caption={`${safeguardingChecklist.length} checklist items`}
+            />
+            <MetricCard
+              label="Duration Variance"
+              value={formatVarianceWithPercent(durationVariance, totalPlannedMin)}
+              caption={`Planned ${totalPlannedMin} min vs actual ${totalActualMin} min`}
+            />
           </section>
 
-          <section className="mb-4">
-            <h2 className="mb-1 text-[15px] font-semibold">Strengths</h2>
-            {summary.strengths.length > 0 ? (
-              <ul className="list-disc space-y-1 pl-5">
-                {summary.strengths.map((item, index) => (
-                  <li key={`${item}-${index}`}>{item}</li>
-                ))}
-              </ul>
-            ) : (
-              <p>No strengths recorded.</p>
-            )}
+          <section
+            className="print-break-candidate mt-5 grid grid-cols-2 gap-4"
+            data-print-start-threshold="340"
+          >
+            <SectionBlock
+              title="Executive Summary"
+              subtitle="High-level narrative of the session"
+              keepTogether
+              printBreakCandidate={false}
+            >
+              <p>{textOrDash(summary.executiveSummary, 'No executive summary recorded.')}</p>
+            </SectionBlock>
+
+            <SectionBlock
+              title="Professional Judgement"
+              subtitle="Overall evaluator view"
+              keepTogether
+              printBreakCandidate={false}
+            >
+              <p>{textOrDash(summary.professionalJudgement, 'No professional judgement recorded.')}</p>
+            </SectionBlock>
           </section>
 
-          <section className="mb-4">
-            <h2 className="mb-1 text-[15px] font-semibold">Areas for Development</h2>
-            {summary.areasForDevelopment.length > 0 ? (
-              <ul className="list-disc space-y-1 pl-5">
-                {summary.areasForDevelopment.map((item, index) => (
-                  <li key={`${item}-${index}`}>{item}</li>
-                ))}
-              </ul>
-            ) : (
-              <p>No areas for development recorded.</p>
-            )}
+          <section
+            className="print-break-candidate mt-4 grid grid-cols-2 gap-4"
+            data-print-start-threshold="320"
+          >
+            <SectionBlock
+              title="Strengths"
+              subtitle="Positive themes captured during review"
+              keepTogether
+              printBreakCandidate={false}
+            >
+              {summary.strengths.length > 0 ? (
+                <ul className="space-y-2">
+                  {summary.strengths.map((item, index) => (
+                    <li key={`${item}-${index}`} className="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3">
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p>No strengths recorded.</p>
+              )}
+            </SectionBlock>
+
+            <SectionBlock
+              title="Areas for Development"
+              subtitle="Actions and improvements to follow up"
+              keepTogether
+              printBreakCandidate={false}
+            >
+              {summary.areasForDevelopment.length > 0 ? (
+                <ul className="space-y-2">
+                  {summary.areasForDevelopment.map((item, index) => (
+                    <li key={`${item}-${index}`} className="rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3">
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p>No areas for development recorded.</p>
+              )}
+            </SectionBlock>
           </section>
 
-          <section className="mb-4">
-            <h2 className="mb-1 text-[15px] font-semibold">Professional Judgement</h2>
-            <p>{textOrDash(summary.professionalJudgement, 'No professional judgement recorded.')}</p>
-          </section>
-
-          <section className="mb-5">
-            <h2 className="mb-1 text-[15px] font-semibold">Meeting Structure & Timing</h2>
-            <table className="w-full border-collapse text-[11px]">
-              <thead>
-                <tr>
-                  <th className="border border-zinc-200 bg-zinc-100 px-2 py-1 text-left">Section</th>
-                  <th className="border border-zinc-200 bg-zinc-100 px-2 py-1 text-center">Planned</th>
-                  <th className="border border-zinc-200 bg-zinc-100 px-2 py-1 text-center">Actual</th>
-                  <th className="border border-zinc-200 bg-zinc-100 px-2 py-1 text-center">Variance (Min / %)</th>
-                  <th className="border border-zinc-200 bg-zinc-100 px-2 py-1 text-left">Notes</th>
-                </tr>
-              </thead>
-              <tbody>
-                {meetingSections.length > 0 ? (
-                  meetingSections.map((section) => {
-                    const planned = toNumber(section.plannedMin, 0);
-                    const actual = toNumber(section.actualMin, 0);
-                    const variance = actual - planned;
-                    return (
-                      <tr key={section.sectionKey}>
-                        <td className="border border-zinc-200 bg-zinc-50 px-2 py-1">{textOrDash(section.sectionName)}</td>
-                        <td className="border border-zinc-200 bg-zinc-50 px-2 py-1 text-center">{planned}</td>
-                        <td className="border border-zinc-200 bg-zinc-50 px-2 py-1 text-center">{actual}</td>
-                        <td className="border border-zinc-200 bg-zinc-50 px-2 py-1 text-center">{formatVarianceWithPercent(variance, planned)}</td>
-                        <td className="border border-zinc-200 bg-zinc-50 px-2 py-1">{textOrDash(section.notes)}</td>
-                      </tr>
-                    );
-                  })
-                ) : (
-                  <tr>
-                    <td className="border border-zinc-200 bg-zinc-50 px-2 py-1" colSpan={5}>No meeting structure data available.</td>
-                  </tr>
-                )}
-                {meetingSections.length > 0 ? (
-                  <tr>
-                    <td className="border border-zinc-200 bg-zinc-100 px-2 py-1 font-semibold">Total</td>
-                    <td className="border border-zinc-200 bg-zinc-100 px-2 py-1 text-center font-semibold">{totalPlannedMin}</td>
-                    <td className="border border-zinc-200 bg-zinc-100 px-2 py-1 text-center font-semibold">{totalActualMin}</td>
-                    <td className="border border-zinc-200 bg-zinc-100 px-2 py-1 text-center font-semibold">{formatVarianceWithPercent(totalActualMin - totalPlannedMin, totalPlannedMin)}</td>
-                    <td className="border border-zinc-200 bg-zinc-100 px-2 py-1">-</td>
-                  </tr>
-                ) : null}
-              </tbody>
-            </table>
-          </section>
-
-          <section className="mb-5">
-            <h2 className="mb-1 text-[15px] font-semibold">QA Checklist</h2>
-            <table className="w-full border-collapse text-[11px]">
-              <thead>
-                <tr>
-                  <th className="w-[34%] border border-zinc-200 bg-zinc-100 px-2 py-1 text-left">Metric</th>
-                  <th className="w-[14%] border border-zinc-200 bg-zinc-100 px-2 py-1 text-left">Result</th>
-                  <th className="w-[10%] border border-zinc-200 bg-zinc-100 px-2 py-1 text-left">Score (%)</th>
-                  <th className="w-[42%] border border-zinc-200 bg-zinc-100 px-2 py-1 text-left">Notes</th>
-                </tr>
-              </thead>
-              <tbody>
-                {qaIndicators.length > 0 ? (
-                  qaIndicators.map((indicator) => (
-                    <tr key={indicator.indicatorKey} className="align-top">
-                      <td className="border border-zinc-200 bg-zinc-50 px-2 py-1">{normaliseCriterionName(indicator.indicatorName)}</td>
-                      <td className="border border-zinc-200 bg-zinc-50 px-2 py-1">
-                        <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold ${triStateBadgeClass(indicator.status)}`}>
-                          {indicator.status}
-                        </span>
-                      </td>
-                      <td className="border border-zinc-200 bg-zinc-50 px-2 py-1">{formatScoreWithPercent(indicator.score0to5)}</td>
-                      <td className="border border-zinc-200 bg-zinc-50 px-2 py-1">{textOrDash(indicator.comments)}</td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td className="border border-zinc-200 bg-zinc-50 px-2 py-1" colSpan={4}>QA metrics are not available for this review.</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </section>
-
-          <section className="mb-5">
-            <h2 className="mb-1 text-[15px] font-semibold">Safeguarding Checklist</h2>
-            <table className="w-full border-collapse text-[11px]">
-              <thead>
-                <tr>
-                  <th className="w-[34%] border border-zinc-200 bg-zinc-100 px-2 py-1 text-left">Checklist Item</th>
-                  <th className="w-[14%] border border-zinc-200 bg-zinc-100 px-2 py-1 text-left">Result</th>
-                  <th className="w-[10%] border border-zinc-200 bg-zinc-100 px-2 py-1 text-left">Score (%)</th>
-                  <th className="w-[42%] border border-zinc-200 bg-zinc-100 px-2 py-1 text-left">Notes</th>
-                </tr>
-              </thead>
-              <tbody>
-                {safeguardingChecklist.length > 0 ? (
-                  safeguardingChecklist.map((item) => (
-                    <tr key={item.key} className="align-top">
-                      <td className="border border-zinc-200 bg-zinc-50 px-2 py-1">{textOrDash(item.label)}</td>
-                      <td className="border border-zinc-200 bg-zinc-50 px-2 py-1">
-                        <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold ${triStateBadgeClass(item.status)}`}>
-                          {item.status}
-                        </span>
-                      </td>
-                      <td className="border border-zinc-200 bg-zinc-50 px-2 py-1">{triStateToPercent(item.status)}%</td>
-                      <td className="border border-zinc-200 bg-zinc-50 px-2 py-1">{textOrDash(item.notes)}</td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td className="border border-zinc-200 bg-zinc-50 px-2 py-1" colSpan={4}>No safeguarding checklist available.</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </section>
-
-          <section className="mb-5">
-            <h2 className="mb-1 text-[15px] font-semibold">Transcript Evidence</h2>
-            {transcriptEvidence.length > 0 ? (
+          <div className="mt-5 space-y-5">
+            <SectionBlock
+              title="Meeting Structure and Timing"
+              subtitle="Planned and actual timing across the session"
+              printStartThreshold={260}
+            >
               <table className="w-full border-collapse text-[11px]">
                 <thead>
                   <tr>
-                    <th className="w-[14%] border border-zinc-200 bg-zinc-100 px-2 py-1 text-left">Timestamp</th>
-                    <th className="w-[14%] border border-zinc-200 bg-zinc-100 px-2 py-1 text-left">Speaker</th>
-                    <th className="w-[52%] border border-zinc-200 bg-zinc-100 px-2 py-1 text-left">Evidence</th>
-                    <th className="w-[20%] border border-zinc-200 bg-zinc-100 px-2 py-1 text-left">Metric</th>
+                    <th className="border border-slate-200 bg-slate-100 px-3 py-2 text-left">Section</th>
+                    <th className="border border-slate-200 bg-slate-100 px-3 py-2 text-center">Planned</th>
+                    <th className="border border-slate-200 bg-slate-100 px-3 py-2 text-center">Actual</th>
+                    <th className="border border-slate-200 bg-slate-100 px-3 py-2 text-center">Variance</th>
+                    <th className="border border-slate-200 bg-slate-100 px-3 py-2 text-left">Notes</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {transcriptEvidence.map((item, index) => (
-                    <tr key={`${item.timestamp}-${index}`} className="align-top">
-                      <td className="border border-zinc-200 bg-zinc-50 px-2 py-1 font-mono">{textOrDash(item.timestamp)}</td>
-                      <td className="border border-zinc-200 bg-zinc-50 px-2 py-1">{textOrDash(item.speaker)}</td>
-                      <td className="border border-zinc-200 bg-zinc-50 px-2 py-1">{textOrDash(item.text)}</td>
-                      <td className="border border-zinc-200 bg-zinc-50 px-2 py-1">{textOrDash(item.metric)}</td>
+                  {meetingSections.length > 0 ? (
+                    meetingSections.map((section) => {
+                      const planned = toNumber(section.plannedMin, 0);
+                      const actual = toNumber(section.actualMin, 0);
+                      const variance = actual - planned;
+
+                      return (
+                        <tr key={section.sectionKey}>
+                          <td className="border border-slate-200 bg-white px-3 py-2">{textOrDash(section.sectionName)}</td>
+                          <td className="border border-slate-200 bg-white px-3 py-2 text-center">{planned}</td>
+                          <td className="border border-slate-200 bg-white px-3 py-2 text-center">{actual}</td>
+                          <td className="border border-slate-200 bg-white px-3 py-2 text-center">
+                            {formatVarianceWithPercent(variance, planned)}
+                          </td>
+                          <td className="border border-slate-200 bg-white px-3 py-2">{textOrDash(section.notes)}</td>
+                        </tr>
+                      );
+                    })
+                  ) : (
+                    <tr>
+                      <td className="border border-slate-200 bg-white px-3 py-2" colSpan={5}>
+                        No meeting structure data available.
+                      </td>
                     </tr>
-                  ))}
+                  )}
+                  {meetingSections.length > 0 ? (
+                    <tr>
+                      <td className="border border-slate-200 bg-slate-100 px-3 py-2 font-semibold">Total</td>
+                      <td className="border border-slate-200 bg-slate-100 px-3 py-2 text-center font-semibold">{totalPlannedMin}</td>
+                      <td className="border border-slate-200 bg-slate-100 px-3 py-2 text-center font-semibold">{totalActualMin}</td>
+                      <td className="border border-slate-200 bg-slate-100 px-3 py-2 text-center font-semibold">
+                        {formatVarianceWithPercent(durationVariance, totalPlannedMin)}
+                      </td>
+                      <td className="border border-slate-200 bg-slate-100 px-3 py-2">-</td>
+                    </tr>
+                  ) : null}
                 </tbody>
               </table>
-            ) : (
-              <p>No transcript evidence available.</p>
-            )}
-          </section>
+            </SectionBlock>
 
-          <section className="mb-2">
-            <h2 className="mb-1 text-[15px] font-semibold">Overall Rating</h2>
-            <p>
-              RAG: <span className={`font-semibold ${ragTextClass(ragLabel)}`}>{ragLabel}</span>
-            </p>
-            <p>Qualitative: {textOrDash(review.qualitativeRating)}</p>
-            <p>Overall QA Score: {formatScoreWithPercent(overallQaScore)}</p>
-            <p>Satisfaction: {formatScoreWithPercent(satisfactionScore)}</p>
-          </section>
+            <SectionBlock
+              title="QA Checklist"
+              subtitle="Indicator-level quality assessment"
+              printStartThreshold={240}
+            >
+              <table className="w-full border-collapse text-[11px]">
+                <thead>
+                  <tr>
+                    <th className="w-[34%] border border-slate-200 bg-slate-100 px-3 py-2 text-left">Metric</th>
+                    <th className="w-[14%] border border-slate-200 bg-slate-100 px-3 py-2 text-left">Result</th>
+                    <th className="w-[14%] border border-slate-200 bg-slate-100 px-3 py-2 text-left">Score</th>
+                    <th className="w-[38%] border border-slate-200 bg-slate-100 px-3 py-2 text-left">Notes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {qaIndicators.length > 0 ? (
+                    qaIndicators.map((indicator) => (
+                      <tr key={indicator.indicatorKey} className="align-top">
+                        <td className="border border-slate-200 bg-white px-3 py-2">
+                          {normaliseCriterionName(indicator.indicatorName)}
+                        </td>
+                        <td className="border border-slate-200 bg-white px-3 py-2">
+                          <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold ${triStateBadgeClass(indicator.status)}`}>
+                            {indicator.status}
+                          </span>
+                        </td>
+                        <td className="border border-slate-200 bg-white px-3 py-2">{formatScoreWithPercent(indicator.score0to5)}</td>
+                        <td className="border border-slate-200 bg-white px-3 py-2">{textOrDash(indicator.comments)}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td className="border border-slate-200 bg-white px-3 py-2" colSpan={4}>
+                        QA metrics are not available for this review.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </SectionBlock>
 
-          <footer className="mt-6 text-[11px] text-zinc-500">
-            <p>Generated by IT Team</p>
-            <p>(c) Kent Business College</p>
-          </footer>
+            <SectionBlock
+              title="Safeguarding Checklist"
+              subtitle="Compliance and safety checks captured during the session"
+              printStartThreshold={360}
+            >
+              <table className="w-full border-collapse text-[11px]">
+                <thead>
+                  <tr>
+                    <th className="w-[34%] border border-slate-200 bg-slate-100 px-3 py-2 text-left">Checklist Item</th>
+                    <th className="w-[14%] border border-slate-200 bg-slate-100 px-3 py-2 text-left">Result</th>
+                    <th className="w-[14%] border border-slate-200 bg-slate-100 px-3 py-2 text-left">Score</th>
+                    <th className="w-[38%] border border-slate-200 bg-slate-100 px-3 py-2 text-left">Notes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {safeguardingChecklist.length > 0 ? (
+                    safeguardingChecklist.map((item) => (
+                      <tr key={item.key} className="align-top">
+                        <td className="border border-slate-200 bg-white px-3 py-2">{textOrDash(item.label)}</td>
+                        <td className="border border-slate-200 bg-white px-3 py-2">
+                          <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold ${triStateBadgeClass(item.status)}`}>
+                            {item.status}
+                          </span>
+                        </td>
+                        <td className="border border-slate-200 bg-white px-3 py-2">{triStateToPercent(item.status)}%</td>
+                        <td className="border border-slate-200 bg-white px-3 py-2">{textOrDash(item.notes)}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td className="border border-slate-200 bg-white px-3 py-2" colSpan={4}>
+                        No safeguarding checklist available.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </SectionBlock>
+
+            <SectionBlock
+              title="Transcript Evidence"
+              subtitle="Quoted evidence and references captured from the meeting"
+              printStartThreshold={120}
+            >
+              {transcriptEvidence.length > 0 ? (
+                <table className="w-full border-collapse text-[11px]">
+                  <thead>
+                    <tr>
+                      <th className="w-[14%] border border-slate-200 bg-slate-100 px-3 py-2 text-left">Timestamp</th>
+                      <th className="w-[14%] border border-slate-200 bg-slate-100 px-3 py-2 text-left">Speaker</th>
+                      <th className="w-[52%] border border-slate-200 bg-slate-100 px-3 py-2 text-left">Evidence</th>
+                      <th className="w-[20%] border border-slate-200 bg-slate-100 px-3 py-2 text-left">Metric</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {transcriptEvidence.map((item, index) => (
+                      <tr key={`${item.timestamp}-${index}`} className="align-top">
+                        <td className="border border-slate-200 bg-white px-3 py-2 font-mono">{textOrDash(item.timestamp)}</td>
+                        <td className="border border-slate-200 bg-white px-3 py-2">{textOrDash(item.speaker)}</td>
+                        <td className="border border-slate-200 bg-white px-3 py-2">{textOrDash(item.text)}</td>
+                        <td className="border border-slate-200 bg-white px-3 py-2">{textOrDash(item.metric)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <p>No transcript evidence available.</p>
+              )}
+            </SectionBlock>
+          </div>
+
+          <div className="print-break-candidate" data-print-start-threshold="170">
+            <section className="mt-5 rounded-[22px] border border-slate-200 bg-slate-50 px-5 py-4">
+              <div className="flex items-start justify-between gap-6">
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Overall Rating</p>
+                  <p className="mt-2 text-[18px] font-semibold text-slate-900">{qualitativeLabel}</p>
+                </div>
+                <div className="text-right text-[11px] leading-5">
+                  <p>
+                    RAG: <span className={`font-semibold ${ragTextClass(ragLabel)}`}>{ragLabel}</span>
+                  </p>
+                  <p>Overall QA Score: {formatScoreWithPercent(overallQaScore)}</p>
+                  <p>Satisfaction: {formatScoreWithPercent(satisfactionScore)}</p>
+                </div>
+              </div>
+            </section>
+
+            <footer className="mt-6 flex items-center justify-between border-t border-slate-200 pt-4 text-[11px] text-slate-500">
+              <p>Generated by IT Team</p>
+              <p>(c) Kent Business College</p>
+            </footer>
+          </div>
         </div>
       </div>
 
       <div className="no-print fixed bottom-6 right-6">
         <button
-          onClick={() => window.print()}
-          className="flex cursor-pointer items-center gap-2 whitespace-nowrap rounded-lg bg-teal-500 px-6 py-3 font-semibold text-white shadow-lg transition-colors hover:bg-teal-600"
+          onClick={handlePrint}
+          className="flex cursor-pointer items-center gap-2 whitespace-nowrap rounded-lg bg-indigo-500 px-6 py-3 font-semibold text-white shadow-lg transition-colors hover:bg-indigo-600"
         >
           <i className="ri-printer-line text-xl"></i>
           Print / Save as PDF
@@ -431,11 +706,3 @@ export default function McrReviewPrint() {
     </div>
   );
 }
-
-
-
-
-
-
-
-

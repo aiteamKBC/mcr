@@ -45,7 +45,7 @@ export default function DashboardFiltersBar({
             <i className={`ri-filter-3-line text-lg`}></i>
             <span>Filters</span>
             {activeCount > 0 && (
-              <span className="bg-teal-600 text-white text-xs font-semibold px-2 py-0.5 rounded-full">
+              <span className="bg-indigo-600 text-white text-xs font-semibold px-2 py-0.5 rounded-full">
                 {activeCount}
               </span>
             )}
@@ -55,7 +55,7 @@ export default function DashboardFiltersBar({
         {activeCount > 0 && (
           <button
             onClick={handleReset}
-            className="text-sm text-teal-600 hover:text-teal-700 font-medium flex items-center gap-1 cursor-pointer whitespace-nowrap"
+            className="text-sm text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1 cursor-pointer whitespace-nowrap"
           >
             <i className="ri-refresh-line"></i>
             Reset All
@@ -73,7 +73,7 @@ export default function DashboardFiltersBar({
               type="date"
               value={filters.dateFrom || ''}
               onChange={(e) => handleFilterChange('dateFrom', e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
             />
           </div>
 
@@ -84,7 +84,7 @@ export default function DashboardFiltersBar({
               type="date"
               value={filters.dateTo || ''}
               onChange={(e) => handleFilterChange('dateTo', e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
             />
           </div>
 
@@ -94,7 +94,7 @@ export default function DashboardFiltersBar({
             <select
               value={filters.status || 'all'}
               onChange={(e) => handleFilterChange('status', e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent cursor-pointer"
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent cursor-pointer"
             >
               <option value="all">All Statuses</option>
               <option value="completed">Completed</option>
@@ -110,7 +110,7 @@ export default function DashboardFiltersBar({
             <select
               value={filters.model || 'all'}
               onChange={(e) => handleFilterChange('model', e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent cursor-pointer"
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent cursor-pointer"
             >
               <option value="all">All Models</option>
               {modelOptions.map((model) => (
@@ -127,7 +127,7 @@ export default function DashboardFiltersBar({
             <select
               value={filters.prompt_version || 'all'}
               onChange={(e) => handleFilterChange('prompt_version', e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent cursor-pointer"
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent cursor-pointer"
             >
               <option value="all">All Versions</option>
               {promptVersionOptions.map((version) => (
@@ -144,7 +144,7 @@ export default function DashboardFiltersBar({
             <select
               value={filters.rag || 'all'}
               onChange={(e) => handleFilterChange('rag', e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent cursor-pointer"
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent cursor-pointer"
             >
               <option value="all">All RAG</option>
               <option value="Green">Green</option>
@@ -162,7 +162,7 @@ export default function DashboardFiltersBar({
                 value={filters.booking_id || ''}
                 onChange={(e) => handleFilterChange('booking_id', e.target.value)}
                 placeholder="Enter booking ID..."
-                className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               />
               <i className="ri-search-line absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
             </div>
@@ -174,77 +174,77 @@ export default function DashboardFiltersBar({
       {!isExpanded && activeCount > 0 && (
         <div className="px-4 pb-4 flex flex-wrap gap-2">
           {filters.dateFrom && (
-            <span className="inline-flex items-center gap-1 bg-teal-50 text-teal-700 text-xs font-medium px-2 py-1 rounded">
+            <span className="inline-flex items-center gap-1 bg-indigo-50 text-indigo-700 text-xs font-medium px-2 py-1 rounded">
               From: {filters.dateFrom}
               <button
                 onClick={() => handleFilterChange('dateFrom', '')}
-                className="hover:text-teal-900 cursor-pointer"
+                className="hover:text-indigo-900 cursor-pointer"
               >
                 <i className="ri-close-line"></i>
               </button>
             </span>
           )}
           {filters.dateTo && (
-            <span className="inline-flex items-center gap-1 bg-teal-50 text-teal-700 text-xs font-medium px-2 py-1 rounded">
+            <span className="inline-flex items-center gap-1 bg-indigo-50 text-indigo-700 text-xs font-medium px-2 py-1 rounded">
               To: {filters.dateTo}
               <button
                 onClick={() => handleFilterChange('dateTo', '')}
-                className="hover:text-teal-900 cursor-pointer"
+                className="hover:text-indigo-900 cursor-pointer"
               >
                 <i className="ri-close-line"></i>
               </button>
             </span>
           )}
           {filters.status && filters.status !== 'all' && (
-            <span className="inline-flex items-center gap-1 bg-teal-50 text-teal-700 text-xs font-medium px-2 py-1 rounded">
+            <span className="inline-flex items-center gap-1 bg-indigo-50 text-indigo-700 text-xs font-medium px-2 py-1 rounded">
               Status: {filters.status}
               <button
                 onClick={() => handleFilterChange('status', '')}
-                className="hover:text-teal-900 cursor-pointer"
+                className="hover:text-indigo-900 cursor-pointer"
               >
                 <i className="ri-close-line"></i>
               </button>
             </span>
           )}
           {filters.model && filters.model !== 'all' && (
-            <span className="inline-flex items-center gap-1 bg-teal-50 text-teal-700 text-xs font-medium px-2 py-1 rounded">
+            <span className="inline-flex items-center gap-1 bg-indigo-50 text-indigo-700 text-xs font-medium px-2 py-1 rounded">
               Model: {filters.model}
               <button
                 onClick={() => handleFilterChange('model', '')}
-                className="hover:text-teal-900 cursor-pointer"
+                className="hover:text-indigo-900 cursor-pointer"
               >
                 <i className="ri-close-line"></i>
               </button>
             </span>
           )}
           {filters.prompt_version && filters.prompt_version !== 'all' && (
-            <span className="inline-flex items-center gap-1 bg-teal-50 text-teal-700 text-xs font-medium px-2 py-1 rounded">
+            <span className="inline-flex items-center gap-1 bg-indigo-50 text-indigo-700 text-xs font-medium px-2 py-1 rounded">
               Prompt: {filters.prompt_version}
               <button
                 onClick={() => handleFilterChange('prompt_version', '')}
-                className="hover:text-teal-900 cursor-pointer"
+                className="hover:text-indigo-900 cursor-pointer"
               >
                 <i className="ri-close-line"></i>
               </button>
             </span>
           )}
           {filters.rag && filters.rag !== 'all' && (
-            <span className="inline-flex items-center gap-1 bg-teal-50 text-teal-700 text-xs font-medium px-2 py-1 rounded">
+            <span className="inline-flex items-center gap-1 bg-indigo-50 text-indigo-700 text-xs font-medium px-2 py-1 rounded">
               RAG: {filters.rag}
               <button
                 onClick={() => handleFilterChange('rag', '')}
-                className="hover:text-teal-900 cursor-pointer"
+                className="hover:text-indigo-900 cursor-pointer"
               >
                 <i className="ri-close-line"></i>
               </button>
             </span>
           )}
           {filters.booking_id && (
-            <span className="inline-flex items-center gap-1 bg-teal-50 text-teal-700 text-xs font-medium px-2 py-1 rounded">
+            <span className="inline-flex items-center gap-1 bg-indigo-50 text-indigo-700 text-xs font-medium px-2 py-1 rounded">
               Booking: {filters.booking_id}
               <button
                 onClick={() => handleFilterChange('booking_id', '')}
-                className="hover:text-teal-900 cursor-pointer"
+                className="hover:text-indigo-900 cursor-pointer"
               >
                 <i className="ri-close-line"></i>
               </button>

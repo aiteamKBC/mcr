@@ -7,14 +7,26 @@ export type RecipientType = 'Employer' | 'Learner' | 'QA';
 export type DeliveryStatus = 'Sent' | 'Pending' | 'Failed' | 'Delivered';
 export type UserRole = 'admin' | 'qa' | 'coach' | 'employer' | 'learner';
 
+export interface NamedEntity {
+  id: string;
+  name: string;
+  email?: string;
+}
+
+export type EntityRef = string | NamedEntity;
+
 // Main MCR Review
 export interface McrReview {
   id: string;
   date: string;
-  coach: string;
-  learner: string;
-  programme: string;
-  group: string;
+  /** ISO date YYYY-MM-DD from booking/session when known */
+  meetingDayDate?: string | null;
+  /** ISO datetime when session start / booking timestamp is known */
+  meetingStartsAt?: string | null;
+  coach: EntityRef;
+  learner: EntityRef;
+  programme: EntityRef;
+  group: EntityRef;
   meetingLink: string;
   totalDurationMin: number;
   ragStatus: 'Red' | 'Amber' | 'Green';
@@ -92,6 +104,7 @@ export interface TranscriptEvidenceItem {
 }
 
 export interface OverallSummary {
+  overallRating?: string;
   executiveSummary: string;
   strengths: string[];
   areasForDevelopment: string[];
@@ -135,6 +148,7 @@ export interface McrReviewDetail extends McrReview {
   attachments: Attachment[];
   communicationLog: CommunicationLogEntry[];
   overallSummary: {
+    overallRating?: string;
     executiveSummary: string;
     strengths: string[];
     areasForDevelopment: string[];
@@ -240,4 +254,3 @@ export interface ReviewsFilters {
   satisfactionLow?: boolean;
   search?: string;
 }
-

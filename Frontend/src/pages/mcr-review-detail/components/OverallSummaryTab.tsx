@@ -7,7 +7,7 @@ interface OverallSummaryTabProps {
 
 const ratingConfig: Record<string, { bg: string; text: string; border: string; icon: string }> = {
   Outstanding:            { bg: 'bg-emerald-50',  text: 'text-emerald-700', border: 'border-emerald-200', icon: 'ri-award-fill' },
-  Strong:                 { bg: 'bg-teal-50',     text: 'text-teal-700',    border: 'border-teal-200',    icon: 'ri-thumb-up-fill' },
+  Strong:                 { bg: 'bg-indigo-50',     text: 'text-indigo-700',    border: 'border-indigo-200',    icon: 'ri-thumb-up-fill' },
   'Requires Improvement': { bg: 'bg-amber-50',    text: 'text-amber-700',   border: 'border-amber-200',   icon: 'ri-error-warning-fill' },
   'Cause for Concern':    { bg: 'bg-red-50',      text: 'text-red-700',     border: 'border-red-200',     icon: 'ri-alarm-warning-fill' },
 };
@@ -34,7 +34,7 @@ export default function OverallSummaryTab({ review }: OverallSummaryTabProps) {
   return (
     <div className="space-y-5">
 
-      {/* ── Rating Banner ── */}
+      {/* â”€â”€ Rating Banner â”€â”€ */}
       <div className={`flex items-center justify-between rounded-xl border px-6 py-4 ${rc.bg} ${rc.border}`}>
         <div className="flex items-center gap-3">
           <div className={`w-10 h-10 flex items-center justify-center rounded-lg bg-white/70 ${rc.text}`}>
@@ -46,18 +46,18 @@ export default function OverallSummaryTab({ review }: OverallSummaryTabProps) {
           </div>
         </div>
         <div className={`text-xs font-medium ${rc.text} opacity-70 max-w-xs text-right leading-relaxed`}>
-          {summary.overallRating === 'Outstanding'            && 'Absolutely top-drawer — couldn\'t have asked for better.'}
-          {summary.overallRating === 'Strong'                 && 'Solid work all round — ticking the right boxes nicely.'}
-          {summary.overallRating === 'Requires Improvement'   && 'Room for tightening up — nothing that can\'t be brought up to scratch.'}
-          {summary.overallRating === 'Cause for Concern'      && 'Needs sorting out rather urgently — can\'t afford to let this slide.'}
+          {summary.overallRating === 'Outstanding'            && 'Absolutely top-drawer - could not have asked for better.'}
+          {summary.overallRating === 'Strong'                 && 'Solid work all round - ticking the right boxes nicely.'}
+          {summary.overallRating === 'Requires Improvement'   && 'Room for tightening up - nothing that cannot be brought up to scratch.'}
+          {summary.overallRating === 'Cause for Concern'      && 'Needs sorting out rather urgently - cannot afford to let this slide.'}
         </div>
       </div>
 
-      {/* ── Executive Summary ── */}
+      {/* â”€â”€ Executive Summary â”€â”€ */}
       <div className="bg-white rounded-xl border border-gray-100 p-6">
         <div className="flex items-center gap-2.5 mb-4">
-          <div className="w-8 h-8 flex items-center justify-center bg-teal-50 rounded-lg">
-            <i className="ri-file-list-3-line text-teal-600"></i>
+          <div className="w-8 h-8 flex items-center justify-center bg-indigo-50 rounded-lg">
+            <i className="ri-file-list-3-line text-indigo-600"></i>
           </div>
           <div>
             <h3 className="text-sm font-bold text-gray-900">Executive Summary</h3>
@@ -69,7 +69,7 @@ export default function OverallSummaryTab({ review }: OverallSummaryTabProps) {
         </p>
       </div>
 
-      {/* ── Strengths + Areas ── */}
+      {/* â”€â”€ Strengths + Areas â”€â”€ */}
       <div className="grid grid-cols-2 gap-5">
         {/* Strengths */}
         <div className="bg-white rounded-xl border border-gray-100 p-6">
@@ -118,7 +118,7 @@ export default function OverallSummaryTab({ review }: OverallSummaryTabProps) {
         </div>
       </div>
 
-      {/* ── Professional Judgement ── */}
+      {/* â”€â”€ Professional Judgement â”€â”€ */}
       <div className="bg-white rounded-xl border border-gray-100 p-6">
         <div className="flex items-center gap-2.5 mb-4">
           <div className="w-8 h-8 flex items-center justify-center bg-slate-100 rounded-lg">
@@ -137,3 +137,4 @@ export default function OverallSummaryTab({ review }: OverallSummaryTabProps) {
     </div>
   );
 }
+

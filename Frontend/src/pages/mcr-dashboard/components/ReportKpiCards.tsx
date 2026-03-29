@@ -25,8 +25,8 @@ export default function ReportKpiCards({ kpis }: ReportKpiCardsProps) {
       {/* Total Reports */}
       <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-shadow">
         <div className="flex items-start justify-between mb-4">
-          <div className="w-10 h-10 bg-teal-50 rounded-lg flex items-center justify-center">
-            <i className="ri-file-text-line text-lg text-teal-600"></i>
+          <div className="w-10 h-10 bg-indigo-50 rounded-lg flex items-center justify-center">
+            <i className="ri-file-text-line text-lg text-indigo-600"></i>
           </div>
           <span className="text-xs font-medium text-gray-400 uppercase tracking-wide">Total</span>
         </div>
@@ -76,7 +76,7 @@ export default function ReportKpiCards({ kpis }: ReportKpiCardsProps) {
         <div className="text-sm text-gray-500">Failed Reports</div>
         <div className="mt-3 flex items-center gap-1 text-xs">
           {kpis.failed === 0 ? (
-            <span className="text-emerald-600 font-medium">All clear — no failures</span>
+            <span className="text-emerald-600 font-medium">All clear - no failures</span>
           ) : (
             <span className="text-red-500 font-medium">
               {((kpis.failed / kpis.total) * 100).toFixed(1)}% failure rate
@@ -106,3 +106,4 @@ export default function ReportKpiCards({ kpis }: ReportKpiCardsProps) {
     </div>
   );
 }
+

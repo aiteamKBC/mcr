@@ -46,7 +46,7 @@ export default function RagDistributionChart({ data, isLoading }: RagDistributio
       {/* Header */}
       <div className="mb-5">
         <h3 className="text-sm font-bold text-slate-900 tracking-tight">RAG Status Distribution</h3>
-        <p className="text-xs text-slate-400 mt-0.5">Quality ratings breakdown · {total} total</p>
+        <p className="text-xs text-slate-400 mt-0.5">Quality ratings breakdown Â· {total} total</p>
       </div>
 
       {/* Donut */}

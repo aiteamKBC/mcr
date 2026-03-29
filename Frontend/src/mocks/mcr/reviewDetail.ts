@@ -12,6 +12,13 @@ export const mockReviewDetail: McrReview = {
   ragStatus: 'Green',
   qualitativeRating: 'Outstanding',
   safeguardingFlagged: false,
+  satisfactionScore: 4.7,
+  overallQaScore: 4.6,
+  communicatedTo: {
+    employer: true,
+    learner: true,
+    qa: true,
+  },
   createdAt: '2024-01-15T10:00:00Z',
   updatedAt: '2024-01-15T11:30:00Z',
   meetingSections: [
@@ -228,6 +235,7 @@ export const mockReviewDetail: McrReview = {
     },
   ],
   overallSummary: {
+    overallRating: 'Outstanding',
     executiveSummary: 'This Monthly Coach Review demonstrates outstanding progress by James Anderson in his Level 6 Chartered Manager Degree Apprenticeship. The learner has shown exceptional engagement throughout the review period, with strong evidence of knowledge, skills, and behaviours development across all key areas.\n\nThe meeting was conducted professionally and efficiently, with all planned sections covered within appropriate timeframes. James presented his work with confidence and clarity, demonstrating deep understanding of management concepts and their practical application in his workplace context.\n\nAll QA indicators were met or exceeded, with particularly strong performance in learner presentation quality, coach feedback quality, and satisfaction scores. Safeguarding procedures were followed correctly, with no concerns identified.',
     strengths: [
       'Exceptional presentation skills with clear articulation of complex management concepts and their practical application',
@@ -274,6 +282,7 @@ export const mockReviewDetail: McrReview = {
   ],
   communicationLog: [
     {
+      id: 'comm-001',
       recipientType: 'Learner',
       sentAt: '2024-01-15T12:00:00Z',
       sentBy: 'Dr. Sarah Johnson',
@@ -281,6 +290,7 @@ export const mockReviewDetail: McrReview = {
       notes: 'MCR summary and action points sent to learner. Confirmed receipt and understanding of next steps.',
     },
     {
+      id: 'comm-002',
       recipientType: 'Employer',
       sentAt: '2024-01-15T14:30:00Z',
       sentBy: 'Dr. Sarah Johnson',
@@ -288,6 +298,7 @@ export const mockReviewDetail: McrReview = {
       notes: 'Progress report sent to employer line manager. Highlighted excellent progress and recommended continued support for workplace learning activities.',
     },
     {
+      id: 'comm-003',
       recipientType: 'QA',
       sentAt: '2024-01-15T16:00:00Z',
       sentBy: 'System',

@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import type { McrReview } from '../../../types/mcr';
 
 interface SafeguardingTabProps {
@@ -71,7 +71,7 @@ export default function SafeguardingTab({ review }: SafeguardingTabProps) {
 
       <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
-          <i className="ri-shield-check-line text-teal-500"></i>
+          <i className="ri-shield-check-line text-indigo-500"></i>
           <h3 className="text-sm font-bold text-gray-900">8-Point Safeguarding Checklist</h3>
           <span className="ml-auto text-xs text-gray-400">{checklist.length} checks</span>
         </div>
@@ -175,3 +175,4 @@ export default function SafeguardingTab({ review }: SafeguardingTabProps) {
     </div>
   );
 }
+

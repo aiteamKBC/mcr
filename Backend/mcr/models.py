@@ -98,3 +98,24 @@ class CommunicationLogEntry(models.Model):
     sent_by = models.CharField(max_length=200, blank=True, default="")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_SENT)
     notes = models.TextField(blank=True, default="")
+
+
+class DashboardReviewCommunication(models.Model):
+    """
+    Communication log rows keyed by dashboard review id (booking_summaries.id),
+    used by the live API while review bodies are read from external SQL tables.
+    """
+
+    review_id = models.PositiveIntegerField(db_index=True)
+    recipient_type = models.CharField(max_length=20, choices=CommunicationLogEntry.REC_CHOICES)
+    sent_at = models.DateTimeField(auto_now_add=True)
+    sent_by = models.CharField(max_length=200, blank=True, default="")
+    status = models.CharField(
+        max_length=20,
+        choices=CommunicationLogEntry.STATUS_CHOICES,
+        default=CommunicationLogEntry.STATUS_SENT,
+    )
+    notes = models.TextField(blank=True, default="")
+
+    class Meta:
+        ordering = ["-sent_at"]

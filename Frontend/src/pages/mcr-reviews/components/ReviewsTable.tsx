@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import RagBadge from '../../../components/RagBadge';
-import type { McrReview } from '../../../types/mcr';
+import type { EntityRef, McrReview } from '../../../types/mcr';
+import { meetingListDateTimeLabels } from '../../../utils/meetingDisplay';
 
 interface ReviewsTableProps {
   reviews: McrReview[];
@@ -9,6 +10,8 @@ interface ReviewsTableProps {
   pageSize: number;
   totalPages: number;
   onPageChange: (page: number) => void;
+  onExportAll: () => void | Promise<void>;
+  isExporting?: boolean;
 }
 
 export default function ReviewsTable({
@@ -18,151 +21,155 @@ export default function ReviewsTable({
   pageSize,
   totalPages,
   onPageChange,
+  onExportAll,
+  isExporting = false,
 }: ReviewsTableProps) {
   const [actionMenuOpen, setActionMenuOpen] = useState<string | null>(null);
+  const entityName = (value: EntityRef): string => (typeof value === 'string' ? value : value.name);
 
   const handleViewDetails = (id: string) => {
     window.REACT_APP_NAVIGATE(`/mcr/reviews/${id}`);
   };
 
   const handleExport = (id: string) => {
-    // Will call API endpoint later
-    console.log('Export review:', id);
-    alert('Export functionality will be implemented with backend');
+    window.REACT_APP_NAVIGATE(`/mcr/reviews/${id}/print`);
   };
 
   const handleCommunicationLog = (id: string) => {
-    // Will open modal later
-    console.log('Open communication log:', id);
-    alert('Communication log modal will be implemented');
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-GB', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-    });
-  };
-
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString('en-GB', {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+    window.REACT_APP_NAVIGATE(`/mcr/reviews/${id}?tab=communication`);
   };
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+    <div className="overflow-hidden rounded-[30px] border border-white/75 bg-white/92 shadow-[0_20px_60px_rgba(15,23,42,0.06)]">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+      <div className="flex items-center justify-between border-b border-slate-200/80 bg-[linear-gradient(180deg,_rgba(255,255,255,0.98)_0%,_rgba(248,250,252,0.9)_100%)] px-6 py-5">
         <div>
-          <h3 className="text-base font-semibold text-gray-900">Reviews List</h3>
-          <p className="text-xs text-gray-500 mt-0.5">
+          <h3 className="text-lg font-bold tracking-tight text-slate-900">Reviews List</h3>
+          <p className="mt-1 text-xs text-slate-500">
             Showing {((page - 1) * pageSize) + 1} to {Math.min(page * pageSize, total)} of {total} reviews
           </p>
         </div>
-        <button className="px-4 py-2 text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 rounded-lg transition-colors cursor-pointer whitespace-nowrap">
-          <i className="ri-download-line mr-2"></i>
-          Export All
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            void onExportAll();
+          }}
+          disabled={total === 0 || isExporting}
+          className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-indigo-600 to-violet-500 px-4 py-2 text-sm font-medium text-white shadow-[0_12px_28px_rgba(79,70,229,0.20)] transition-all hover:-translate-y-0.5 hover:from-indigo-700 hover:to-violet-600 cursor-pointer whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isExporting ? (
+            <>
+              <i className="ri-loader-4-line animate-spin mr-2"></i>
+              Exporting...
+            </>
+          ) : (
+            <>
+              <i className="ri-download-line mr-2"></i>
+              Export All
+            </>
+          )}
         </button>
       </div>
 
       {/* Table */}
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-gray-50 border-b border-gray-200">
+          <thead className="border-b border-slate-200 bg-slate-50/80">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 whitespace-nowrap">
-                Date & Time
+              <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 whitespace-nowrap">
+                Date
               </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 whitespace-nowrap">
+              <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 whitespace-nowrap">
                 Learner
               </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 whitespace-nowrap">
+              <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 whitespace-nowrap">
                 Coach
               </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 whitespace-nowrap">
+              <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 whitespace-nowrap">
                 Programme
               </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 whitespace-nowrap">
+              <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 whitespace-nowrap">
                 Group
               </th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 whitespace-nowrap">
+              <th className="px-4 py-3 text-center text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 whitespace-nowrap">
                 Duration
               </th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 whitespace-nowrap">
+              <th className="px-4 py-3 text-center text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 whitespace-nowrap">
                 RAG
               </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 whitespace-nowrap">
+              <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 whitespace-nowrap">
                 Rating
               </th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 whitespace-nowrap">
+              <th className="px-4 py-3 text-center text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 whitespace-nowrap">
                 Flags
               </th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 whitespace-nowrap">
+              <th className="px-4 py-3 text-center text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 whitespace-nowrap">
                 Satisfaction
               </th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 whitespace-nowrap">
+              <th className="px-4 py-3 text-center text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 whitespace-nowrap">
                 Communicated
               </th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 whitespace-nowrap">
+              <th className="px-4 py-3 text-center text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 whitespace-nowrap">
                 Actions
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
-            {reviews.map((review) => (
+          <tbody className="divide-y divide-slate-100">
+            {reviews.map((review) => {
+              const { date: dateLabel } = meetingListDateTimeLabels(review);
+              const learnerName = entityName(review.learner);
+              const coachName = entityName(review.coach);
+              const programmeName = entityName(review.programme);
+              const groupName = entityName(review.group);
+              return (
               <tr
                 key={review.id}
-                className="hover:bg-gray-50 transition-colors cursor-pointer"
+                className="cursor-pointer transition-colors hover:bg-emerald-50/35"
                 onClick={() => handleViewDetails(review.id)}
               >
-                <td className="px-4 py-3">
-                  <div className="text-sm font-medium text-gray-900">
-                    {formatDate(review.date)}
+                <td className="px-4 py-4">
+                  <div className="text-sm font-semibold text-slate-900">
+                    {dateLabel}
                   </div>
-                  <div className="text-xs text-gray-500">{formatTime(review.date)}</div>
                 </td>
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-gradient-to-br from-teal-400 to-teal-600 rounded-full flex items-center justify-center">
+                <td className="px-4 py-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-indigo-400 to-indigo-600 shadow-sm">
                       <span className="text-xs font-semibold text-white">
-                        {review.learner.name.split(' ').map(n => n[0]).join('')}
+                        {learnerName.split(' ').map(n => n[0]).join('')}
                       </span>
                     </div>
-                    <div className="text-sm font-medium text-gray-900">
-                      {review.learner.name}
+                    <div className="text-sm font-semibold text-slate-900">
+                      {learnerName}
                     </div>
                   </div>
                 </td>
-                <td className="px-4 py-3">
-                  <div className="text-sm text-gray-900">{review.coach.name}</div>
+                <td className="px-4 py-4">
+                  <div className="text-sm text-slate-800">{coachName}</div>
                 </td>
-                <td className="px-4 py-3">
-                  <div className="text-sm text-gray-900">{review.programme.name}</div>
+                <td className="px-4 py-4">
+                  <div className="text-sm text-slate-800">{programmeName}</div>
                 </td>
-                <td className="px-4 py-3">
-                  <div className="text-sm text-gray-600">{review.group.name}</div>
+                <td className="px-4 py-4">
+                  <div className="text-sm text-slate-500">{groupName}</div>
                 </td>
-                <td className="px-4 py-3 text-center">
-                  <span className="inline-flex items-center gap-1 text-sm font-medium text-gray-900">
-                    <i className="ri-time-line text-gray-400"></i>
+                <td className="px-4 py-4 text-center">
+                  <span className="inline-flex items-center gap-1 text-sm font-medium text-slate-900">
+                    <i className="ri-time-line text-slate-400"></i>
                     {review.totalDurationMin} min
                   </span>
                 </td>
-                <td className="px-4 py-3 text-center">
+                <td className="px-4 py-4 text-center">
                   <RagBadge status={review.ragStatus} />
                 </td>
-                <td className="px-4 py-3">
+                <td className="px-4 py-4">
                   <span
                     className={`inline-flex px-2 py-1 text-xs font-medium rounded-full whitespace-nowrap ${
                       review.qualitativeRating === 'Outstanding'
                         ? 'bg-green-100 text-green-700'
                         : review.qualitativeRating === 'Good'
-                        ? 'bg-blue-100 text-blue-700'
+                        ? 'bg-indigo-100 text-indigo-700'
                         : review.qualitativeRating === 'Requires Improvement'
                         ? 'bg-amber-100 text-amber-700'
                         : 'bg-red-100 text-red-700'
@@ -171,7 +178,7 @@ export default function ReviewsTable({
                     {review.qualitativeRating}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-center">
+                <td className="px-4 py-4 text-center">
                   <div className="flex items-center justify-center gap-2">
                     {review.safeguardingFlagged ? (
                       <div className="w-6 h-6 bg-red-100 rounded-full flex items-center justify-center" title="Safeguarding Flagged">
@@ -188,7 +195,7 @@ export default function ReviewsTable({
                     )}
                   </div>
                 </td>
-                <td className="px-4 py-3 text-center">
+                <td className="px-4 py-4 text-center">
                   <div className="flex items-center justify-center gap-1">
                     <span className="text-sm font-semibold text-gray-900">
                       {review.satisfactionScore.toFixed(1)}
@@ -196,54 +203,54 @@ export default function ReviewsTable({
                     <span className="text-xs text-gray-400">/5</span>
                   </div>
                 </td>
-                <td className="px-4 py-3 text-center">
+                <td className="px-4 py-4 text-center">
                   <div className="flex items-center justify-center gap-1">
                     <div
                       className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                        review.communicatedToEmployer ? 'bg-green-100' : 'bg-gray-100'
+                        review.communicatedTo.employer ? 'bg-green-100' : 'bg-gray-100'
                       }`}
-                      title={review.communicatedToEmployer ? 'Employer notified' : 'Employer not notified'}
+                      title={review.communicatedTo.employer ? 'Employer notified' : 'Employer not notified'}
                     >
                       <i
                         className={`ri-briefcase-line text-xs ${
-                          review.communicatedToEmployer ? 'text-green-600' : 'text-gray-400'
+                          review.communicatedTo.employer ? 'text-green-600' : 'text-gray-400'
                         }`}
                       ></i>
                     </div>
                     <div
                       className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                        review.communicatedToLearner ? 'bg-green-100' : 'bg-gray-100'
+                        review.communicatedTo.learner ? 'bg-green-100' : 'bg-gray-100'
                       }`}
-                      title={review.communicatedToLearner ? 'Learner notified' : 'Learner not notified'}
+                      title={review.communicatedTo.learner ? 'Learner notified' : 'Learner not notified'}
                     >
                       <i
                         className={`ri-user-line text-xs ${
-                          review.communicatedToLearner ? 'text-green-600' : 'text-gray-400'
+                          review.communicatedTo.learner ? 'text-green-600' : 'text-gray-400'
                         }`}
                       ></i>
                     </div>
                     <div
                       className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                        review.communicatedToQA ? 'bg-green-100' : 'bg-gray-100'
+                        review.communicatedTo.qa ? 'bg-green-100' : 'bg-gray-100'
                       }`}
-                      title={review.communicatedToQA ? 'QA notified' : 'QA not notified'}
+                      title={review.communicatedTo.qa ? 'QA notified' : 'QA not notified'}
                     >
                       <i
                         className={`ri-shield-check-line text-xs ${
-                          review.communicatedToQA ? 'text-green-600' : 'text-gray-400'
+                          review.communicatedTo.qa ? 'text-green-600' : 'text-gray-400'
                         }`}
                       ></i>
                     </div>
                   </div>
                 </td>
-                <td className="px-4 py-3 text-center">
+                <td className="px-4 py-4 text-center">
                   <div className="relative">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         setActionMenuOpen(actionMenuOpen === review.id ? null : review.id);
                       }}
-                      className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
+                      className="rounded-xl p-1.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 cursor-pointer"
                     >
                       <i className="ri-more-2-fill text-lg"></i>
                     </button>
@@ -256,16 +263,16 @@ export default function ReviewsTable({
                             setActionMenuOpen(null);
                           }}
                         ></div>
-                        <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-20 overflow-hidden">
+                        <div className="absolute right-0 top-full z-20 mt-2 w-52 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_16px_40px_rgba(15,23,42,0.12)]">
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               handleViewDetails(review.id);
                               setActionMenuOpen(null);
                             }}
-                            className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer flex items-center gap-2"
+                            className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm text-slate-700 transition-colors hover:bg-slate-50 cursor-pointer"
                           >
-                            <i className="ri-eye-line text-teal-600"></i>
+                            <i className="ri-eye-line text-indigo-600"></i>
                             View Details
                           </button>
                           <button
@@ -274,9 +281,9 @@ export default function ReviewsTable({
                               handleExport(review.id);
                               setActionMenuOpen(null);
                             }}
-                            className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer flex items-center gap-2"
+                            className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm text-slate-700 transition-colors hover:bg-slate-50 cursor-pointer"
                           >
-                            <i className="ri-download-line text-blue-600"></i>
+                            <i className="ri-download-line text-indigo-600"></i>
                             Export Report
                           </button>
                           <button
@@ -285,9 +292,9 @@ export default function ReviewsTable({
                               handleCommunicationLog(review.id);
                               setActionMenuOpen(null);
                             }}
-                            className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer flex items-center gap-2"
+                            className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm text-slate-700 transition-colors hover:bg-slate-50 cursor-pointer"
                           >
-                            <i className="ri-message-3-line text-purple-600"></i>
+                            <i className="ri-message-3-line text-violet-600"></i>
                             Communication Log
                           </button>
                         </div>
@@ -296,7 +303,8 @@ export default function ReviewsTable({
                   </div>
                 </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -304,11 +312,11 @@ export default function ReviewsTable({
       {/* Empty State */}
       {reviews.length === 0 && (
         <div className="py-16 text-center">
-          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <i className="ri-file-list-3-line text-3xl text-gray-400"></i>
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
+            <i className="ri-file-list-3-line text-3xl text-slate-400"></i>
           </div>
-          <h3 className="text-base font-semibold text-gray-900 mb-2">No Reviews Found</h3>
-          <p className="text-sm text-gray-500">
+          <h3 className="mb-2 text-base font-semibold text-slate-900">No Reviews Found</h3>
+          <p className="text-sm text-slate-500">
             Try adjusting your filters to see more results
           </p>
         </div>
@@ -316,15 +324,15 @@ export default function ReviewsTable({
 
       {/* Pagination */}
       {reviews.length > 0 && (
-        <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
-          <div className="text-sm text-gray-600">
+        <div className="flex items-center justify-between border-t border-slate-200 bg-slate-50/65 px-6 py-4">
+          <div className="text-sm text-slate-600">
             Page {page} of {totalPages}
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={() => onPageChange(page - 1)}
               disabled={page === 1}
-              className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer whitespace-nowrap"
+              className="rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer whitespace-nowrap"
             >
               <i className="ri-arrow-left-s-line mr-1"></i>
               Previous
@@ -347,8 +355,8 @@ export default function ReviewsTable({
                     onClick={() => onPageChange(pageNum)}
                     className={`w-8 h-8 text-sm font-medium rounded-lg transition-colors cursor-pointer ${
                       page === pageNum
-                        ? 'bg-teal-600 text-white'
-                        : 'text-gray-700 hover:bg-gray-100'
+                        ? 'bg-indigo-600 text-white shadow-sm'
+                        : 'text-slate-700 hover:bg-slate-100'
                     }`}
                   >
                     {pageNum}
@@ -359,7 +367,7 @@ export default function ReviewsTable({
             <button
               onClick={() => onPageChange(page + 1)}
               disabled={page === totalPages}
-              className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer whitespace-nowrap"
+              className="rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer whitespace-nowrap"
             >
               Next
               <i className="ri-arrow-right-s-line ml-1"></i>
@@ -370,3 +378,4 @@ export default function ReviewsTable({
     </div>
   );
 }
+

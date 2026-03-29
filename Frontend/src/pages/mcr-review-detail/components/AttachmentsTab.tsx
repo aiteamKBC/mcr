@@ -11,7 +11,7 @@ const getFileConfig = (type: string) => {
   if (type.includes('pdf'))
     return { icon: 'ri-file-pdf-line',    bg: 'bg-red-50',    text: 'text-red-600',    border: 'border-red-100',    label: 'PDF Document' };
   if (type.includes('word') || type.includes('document'))
-    return { icon: 'ri-file-word-line',   bg: 'bg-sky-50',    text: 'text-sky-600',    border: 'border-sky-100',    label: 'Word Document' };
+    return { icon: 'ri-file-word-line',   bg: 'bg-blue-50',    text: 'text-blue-600',    border: 'border-blue-100',    label: 'Word Document' };
   if (type.includes('video'))
     return { icon: 'ri-video-line',       bg: 'bg-violet-50', text: 'text-violet-600', border: 'border-violet-100', label: 'Video' };
   if (type.includes('audio'))
@@ -32,13 +32,13 @@ export default function AttachmentsTab({ review }: AttachmentsTabProps) {
   return (
     <div className="space-y-5">
 
-      {/* ── Header KPIs ── */}
+      {/* â”€â”€ Header KPIs â”€â”€ */}
       <div className="grid grid-cols-4 gap-4">
         {[
           { label: 'Total Files',    value: attachments.length,                                                    color: 'text-gray-800',    bg: 'bg-gray-50',    border: 'border-gray-100' },
           { label: 'Presentations',  value: attachments.filter(a => a.type.includes('presentation') || a.type.includes('powerpoint')).length, color: 'text-orange-700', bg: 'bg-orange-50', border: 'border-orange-100' },
           { label: 'PDFs',           value: attachments.filter(a => a.type.includes('pdf')).length,               color: 'text-red-700',     bg: 'bg-red-50',     border: 'border-red-100' },
-          { label: 'Documents',      value: attachments.filter(a => a.type.includes('word') || a.type.includes('document')).length, color: 'text-sky-700', bg: 'bg-sky-50', border: 'border-sky-100' },
+          { label: 'Documents',      value: attachments.filter(a => a.type.includes('word') || a.type.includes('document')).length, color: 'text-blue-700', bg: 'bg-blue-50', border: 'border-blue-100' },
         ].map((k) => (
           <div key={k.label} className={`rounded-xl border ${k.border} ${k.bg} px-4 py-3 text-center`}>
             <p className={`text-2xl font-black ${k.color}`}>{k.value}</p>
@@ -47,11 +47,11 @@ export default function AttachmentsTab({ review }: AttachmentsTabProps) {
         ))}
       </div>
 
-      {/* ── File List ── */}
+      {/* â”€â”€ File List â”€â”€ */}
       {attachments.length > 0 ? (
         <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
-            <i className="ri-attachment-line text-teal-500"></i>
+            <i className="ri-attachment-line text-indigo-500"></i>
             <h3 className="text-sm font-bold text-gray-900">Attached Files</h3>
             <span className="ml-auto text-xs text-gray-400">{attachments.length} {attachments.length === 1 ? 'file' : 'files'}</span>
           </div>
@@ -70,7 +70,7 @@ export default function AttachmentsTab({ review }: AttachmentsTabProps) {
 
                   {/* Info */}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-gray-800 truncate group-hover:text-teal-600 transition-colors">
+                    <p className="text-sm font-semibold text-gray-800 truncate group-hover:text-indigo-600 transition-colors">
                       {file.name}
                     </p>
                     <div className="flex items-center gap-2 mt-0.5">
@@ -85,7 +85,7 @@ export default function AttachmentsTab({ review }: AttachmentsTabProps) {
                       href={file.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 hover:bg-teal-50 text-gray-600 hover:text-teal-700 rounded-lg text-xs font-medium transition-colors cursor-pointer whitespace-nowrap"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 hover:bg-indigo-50 text-gray-600 hover:text-indigo-700 rounded-lg text-xs font-medium transition-colors cursor-pointer whitespace-nowrap"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <i className="ri-eye-line text-xs"></i>
@@ -94,7 +94,7 @@ export default function AttachmentsTab({ review }: AttachmentsTabProps) {
                     <a
                       href={file.url}
                       download
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-teal-50 hover:bg-teal-100 text-teal-700 rounded-lg text-xs font-medium transition-colors cursor-pointer whitespace-nowrap"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-medium transition-colors cursor-pointer whitespace-nowrap"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <i className="ri-download-line text-xs"></i>
@@ -116,7 +116,7 @@ export default function AttachmentsTab({ review }: AttachmentsTabProps) {
         </div>
       )}
 
-      {/* ── Quick Access ── */}
+      {/* â”€â”€ Quick Access â”€â”€ */}
       {attachments.length > 0 && (
         <div className="bg-white rounded-xl border border-gray-100 p-5">
           <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-3">Quick Access</p>
@@ -129,16 +129,16 @@ export default function AttachmentsTab({ review }: AttachmentsTabProps) {
                   href={file.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-3 p-3 bg-gray-50 hover:bg-teal-50 border border-gray-100 hover:border-teal-200 rounded-xl transition-all cursor-pointer group"
+                  className="flex items-center gap-3 p-3 bg-gray-50 hover:bg-indigo-50 border border-gray-100 hover:border-indigo-200 rounded-xl transition-all cursor-pointer group"
                 >
                   <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${fc.bg} border ${fc.border}`}>
                     <i className={`${fc.icon} ${fc.text}`}></i>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-gray-800 truncate group-hover:text-teal-700 transition-colors">{file.name}</p>
+                    <p className="text-xs font-semibold text-gray-800 truncate group-hover:text-indigo-700 transition-colors">{file.name}</p>
                     <p className="text-[10px] text-gray-400">{fc.label}</p>
                   </div>
-                  <i className="ri-arrow-right-line text-gray-300 group-hover:text-teal-500 transition-colors text-sm flex-shrink-0"></i>
+                  <i className="ri-arrow-right-line text-gray-300 group-hover:text-indigo-500 transition-colors text-sm flex-shrink-0"></i>
                 </a>
               );
             })}
@@ -149,3 +149,4 @@ export default function AttachmentsTab({ review }: AttachmentsTabProps) {
     </div>
   );
 }
+

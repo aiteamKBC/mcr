@@ -1,6 +1,4 @@
-
-import { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getReviewById } from '../../utils/mcrApiClient';
 import type { McrReview } from '../../types/mcr';
@@ -113,9 +111,25 @@ const getOverviewByTab = (tab: TabType, review: McrReview) => {
   }
 };
 
+const TAB_KEY_SET = new Set<string>(TABS.map((t) => t.key));
+
+function activeTabFromSearch(searchParams: URLSearchParams): TabType {
+  const raw = searchParams.get('tab');
+  if (raw && TAB_KEY_SET.has(raw)) return raw as TabType;
+  return 'meeting';
+}
+
 export default function McrReviewDetail() {
   const { id } = useParams<{ id: string }>();
-  const [activeTab, setActiveTab] = useState<TabType>('meeting');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = activeTabFromSearch(searchParams);
+
+  const setActiveTab = (key: TabType) => {
+    const next = new URLSearchParams(searchParams);
+    if (key === 'meeting') next.delete('tab');
+    else next.set('tab', key);
+    setSearchParams(next, { replace: true });
+  };
 
   const { data: review, isLoading, error } = useQuery({
     queryKey: ['review', id],
@@ -127,8 +141,8 @@ export default function McrReviewDetail() {
     return (
       <div className="min-h-screen bg-[#f8f9fb] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-[3px] border-teal-500 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-sm text-gray-500 font-medium">Loading review details…</p>
+          <div className="w-12 h-12 border-[3px] border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-sm text-gray-500 font-medium">Loading review details...</p>
         </div>
       </div>
     );
@@ -147,7 +161,7 @@ export default function McrReviewDetail() {
           </p>
           <button
             onClick={() => window.REACT_APP_NAVIGATE('/mcr/reviews')}
-            className="px-5 py-2.5 bg-teal-500 text-white text-sm font-medium rounded-lg hover:bg-teal-600 transition-colors cursor-pointer whitespace-nowrap"
+            className="px-5 py-2.5 bg-indigo-500 text-white text-sm font-medium rounded-lg hover:bg-indigo-600 transition-colors cursor-pointer whitespace-nowrap"
           >
             Back to Reviews
           </button>
@@ -157,23 +171,22 @@ export default function McrReviewDetail() {
   }
 
   const overview = getOverviewByTab(activeTab, review);
+  const coachName = typeof review.coach === 'string' ? review.coach : review.coach.name;
 
   return (
     <div className="min-h-screen bg-[#f8f9fb]">
-      {/* ── Top Bar ── */}
+      {/* â”€â”€ Top Bar â”€â”€ */}
       <div className="bg-white border-b border-gray-100 sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
           {/* Breadcrumb */}
           <div className="flex items-center gap-2 text-sm">
             <button
               onClick={() => window.REACT_APP_NAVIGATE('/mcr/reviews')}
-              className="flex items-center gap-1.5 text-gray-500 hover:text-teal-600 transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 text-gray-500 hover:text-indigo-600 transition-colors cursor-pointer"
             >
               <i className="ri-arrow-left-s-line text-base"></i>
               Reviews
             </button>
-            <span className="text-gray-300">/</span>
-            <span className="text-gray-800 font-medium">{review.id}</span>
           </div>
 
           {/* Right actions */}
@@ -191,7 +204,7 @@ export default function McrReviewDetail() {
 
       <div className="max-w-7xl mx-auto px-6 py-6 space-y-5">
 
-        {/* ── Safeguarding Alert ── */}
+        {/* â”€â”€ Safeguarding Alert â”€â”€ */}
         {review.safeguardingFlagged && (
           <div className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl px-5 py-4">
             <div className="w-8 h-8 flex items-center justify-center flex-shrink-0">
@@ -206,13 +219,13 @@ export default function McrReviewDetail() {
           </div>
         )}
 
-        {/* ── Review Header ── */}
+        {/* â”€â”€ Review Header â”€â”€ */}
         <ReviewHeader review={review} />
 
-        {/* ── Action Bar ── */}
-        <ReviewActions reviewId={review.id} />
+        {/* â”€â”€ Action Bar â”€â”€ */}
+        <ReviewActions reviewId={review.id} coachName={coachName} />
 
-        {/* ── Tabs + Content ── */}
+        {/* â”€â”€ Tabs + Content â”€â”€ */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
           {/* Tab Bar */}
           <div className="border-b border-gray-100 overflow-x-auto">
@@ -223,7 +236,7 @@ export default function McrReviewDetail() {
                   onClick={() => setActiveTab(tab.key)}
                   className={`flex items-center gap-2 px-5 py-3.5 text-sm font-medium transition-all cursor-pointer whitespace-nowrap border-b-2 ${
                     activeTab === tab.key
-                      ? 'text-teal-600 border-teal-500 bg-teal-50/60'
+                      ? 'text-indigo-600 border-indigo-500 bg-indigo-50/60'
                       : 'text-gray-500 border-transparent hover:text-gray-800 hover:bg-gray-50'
                   }`}
                 >
@@ -236,14 +249,14 @@ export default function McrReviewDetail() {
 
           {/* Tab Content */}
           <div className="p-6">
-            <div className="mb-5 rounded-xl border border-teal-100 bg-teal-50/50 px-4 py-3">
+            <div className="mb-5 rounded-xl border border-indigo-100 bg-indigo-50/50 px-4 py-3">
               <div className="flex items-center gap-2 mb-2">
-                <i className="ri-information-line text-teal-600"></i>
-                <h4 className="text-sm font-semibold text-teal-900">{overview.title}</h4>
+                <i className="ri-information-line text-indigo-600"></i>
+                <h4 className="text-sm font-semibold text-indigo-900">{overview.title}</h4>
               </div>
               <ul className="space-y-1">
                 {overview.items.map((item) => (
-                  <li key={item} className="text-xs text-teal-800">
+                  <li key={item} className="text-xs text-indigo-800">
                     {item}
                   </li>
                 ))}
@@ -264,3 +277,4 @@ export default function McrReviewDetail() {
     </div>
   );
 }
+

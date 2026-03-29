@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { getDashboardMetrics, getFilterOptions } from '../../utils/mcrApiClient';
@@ -15,6 +15,7 @@ export default function MCRDashboardPage() {
   const navigate = useNavigate();
   const [filters, setFilters] = useState<DashboardFilters>({});
   const [showFiltersPanel, setShowFiltersPanel] = useState(false);
+  const filtersDropdownRef = useRef<HTMLDivElement | null>(null);
 
   const {
     data: dashboardData,
@@ -43,16 +44,44 @@ export default function MCRDashboardPage() {
   const now = new Date();
   const dateLabel = now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
+  useEffect(() => {
+    if (!showFiltersPanel) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!filtersDropdownRef.current?.contains(event.target as Node)) {
+        setShowFiltersPanel(false);
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setShowFiltersPanel(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEscape);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [showFiltersPanel]);
+
+  const handleFiltersToggle = () => {
+    setShowFiltersPanel((prev) => !prev);
+  };
+
   return (
-    <div className="min-h-screen bg-[#f8f9fc]">
-      {/* ── Top Navigation Bar ── */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-40">
-        <div className="max-w-[1800px] mx-auto px-8">
-          <div className="flex items-center justify-between h-16">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(79,70,229,0.12),_transparent_24%),radial-gradient(circle_at_top_right,_rgba(139,92,246,0.10),_transparent_20%),linear-gradient(180deg,_#f7f7ff_0%,_#f8fafc_42%,_#f8fafc_100%)]">
+      {/* â”€â”€ Top Navigation Bar â”€â”€ */}
+      <header className="sticky top-0 z-40 border-b border-white/70 bg-white/78 shadow-[0_10px_30px_rgba(15,23,42,0.05)] backdrop-blur-xl">
+        <div className="max-w-[1820px] mx-auto px-6 lg:px-8">
+          <div className="flex items-center justify-between min-h-[72px] gap-4">
             {/* Brand */}
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center shadow-sm">
+                <div className="w-10 h-10 bg-gradient-to-br from-indigo-600 via-violet-500 to-blue-400 rounded-2xl flex items-center justify-center shadow-[0_12px_24px_rgba(79,70,229,0.28)]">
                   <i className="ri-dashboard-3-line text-white text-base"></i>
                 </div>
                 <div>
@@ -62,10 +91,10 @@ export default function MCRDashboardPage() {
               </div>
               {/* Nav pills */}
               <nav className="hidden lg:flex items-center gap-1 ml-4">
-                <span className="px-3 py-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 rounded-full border border-emerald-200">Overview</span>
+                <span className="px-3 py-1.5 text-xs font-semibold text-indigo-700 bg-indigo-50 rounded-full border border-indigo-200 shadow-sm">Overview</span>
                 <button
                   onClick={() => navigate('/mcr/reviews')}
-                  className="px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-colors cursor-pointer whitespace-nowrap"
+                  className="px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-800 hover:bg-white rounded-full transition-colors cursor-pointer whitespace-nowrap"
                 >
                   Reviews
                 </button>
@@ -75,33 +104,57 @@ export default function MCRDashboardPage() {
             {/* Right actions */}
             <div className="flex items-center gap-2">
               <span className="hidden xl:block text-xs text-slate-400 mr-2">{dateLabel}</span>
-              <button
-                onClick={() => setShowFiltersPanel(!showFiltersPanel)}
-                className={`flex items-center gap-2 px-3.5 py-2 rounded-lg border text-sm font-medium transition-all cursor-pointer whitespace-nowrap ${
-                  showFiltersPanel
-                    ? 'bg-emerald-50 border-emerald-300 text-emerald-700'
-                    : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50'
-                }`}
-              >
-                <i className="ri-equalizer-line text-base"></i>
-                Filters
-                {activeFiltersCount > 0 && (
-                  <span className="w-5 h-5 bg-emerald-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
-                    {activeFiltersCount}
-                  </span>
+              <div ref={filtersDropdownRef} className="relative">
+                <button
+                  onClick={handleFiltersToggle}
+                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl border text-sm font-medium transition-all cursor-pointer whitespace-nowrap ${
+                    showFiltersPanel
+                      ? 'bg-indigo-50 border-indigo-300 text-indigo-700 shadow-sm'
+                      : 'bg-white/85 border-white/80 text-slate-600 hover:border-slate-200 hover:bg-white shadow-sm'
+                  }`}
+                >
+                  <i className="ri-equalizer-line text-base"></i>
+                  Filters
+                  {activeFiltersCount > 0 && (
+                    <span className="w-5 h-5 bg-indigo-600 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                      {activeFiltersCount}
+                    </span>
+                  )}
+                  <i className={`ri-arrow-${showFiltersPanel ? 'up' : 'down'}-s-line text-base`}></i>
+                </button>
+
+                {showFiltersPanel && (
+                  <div className="fixed inset-0 z-50 bg-[rgba(15,23,42,0.24)] backdrop-blur-[3px]">
+                    <div className="mx-auto flex h-full w-full max-w-[1800px] items-start justify-center px-6 pb-6 pt-24">
+                      <div className="w-full max-w-[1680px]">
+                        <div className="max-h-[calc(100vh-7.5rem)] overflow-y-auto rounded-[28px]">
+                      <FiltersPanel
+                        filters={filters}
+                        onFiltersChange={setFilters}
+                        onClose={() => setShowFiltersPanel(false)}
+                        filterOptions={filterOptions}
+                        activeFiltersCount={activeFiltersCount}
+                        onClearFilters={handleClearFilters}
+                        variant="fullscreen"
+                        className="mb-0"
+                      />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 )}
-              </button>
+              </div>
               <button
                 onClick={() => refetch()}
                 disabled={isLoading}
-                className="flex items-center gap-2 px-3.5 py-2 bg-white border border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50 rounded-lg text-sm font-medium transition-all cursor-pointer whitespace-nowrap disabled:opacity-40"
+                className="flex items-center gap-2 px-3.5 py-2 bg-white/85 border border-white/80 text-slate-600 hover:border-slate-200 hover:bg-white rounded-xl text-sm font-medium transition-all cursor-pointer whitespace-nowrap disabled:opacity-40 shadow-sm"
               >
                 <i className={`ri-refresh-line text-base ${isLoading ? 'animate-spin' : ''}`}></i>
                 <span className="hidden sm:inline">Refresh</span>
               </button>
               <button
                 onClick={() => navigate('/mcr/reviews')}
-                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-lg text-sm font-semibold transition-all cursor-pointer whitespace-nowrap shadow-sm"
+                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-600 to-violet-500 hover:from-indigo-700 hover:to-violet-600 text-white rounded-xl text-sm font-semibold transition-all cursor-pointer whitespace-nowrap shadow-[0_14px_30px_rgba(79,70,229,0.24)] hover:-translate-y-0.5"
               >
                 <i className="ri-file-list-3-line text-base"></i>
                 All Reviews
@@ -111,8 +164,8 @@ export default function MCRDashboardPage() {
         </div>
       </header>
 
-      {/* ── Page Body ── */}
-      <main className="max-w-[1800px] mx-auto px-8 py-7">
+      {/* â”€â”€ Page Body â”€â”€ */}
+      <main className="max-w-[1820px] mx-auto px-6 lg:px-8 py-8">
 
         {/* Error Banner */}
         {isError && (
@@ -135,23 +188,11 @@ export default function MCRDashboardPage() {
           </div>
         )}
 
-        {/* Filters Panel */}
-        {showFiltersPanel && (
-          <FiltersPanel
-            filters={filters}
-            onFiltersChange={setFilters}
-            onClose={() => setShowFiltersPanel(false)}
-            filterOptions={filterOptions}
-            activeFiltersCount={activeFiltersCount}
-            onClearFilters={handleClearFilters}
-          />
-        )}
-
         {/* KPI Cards */}
         <KpiCards kpis={dashboardData?.kpis} isLoading={isLoading} />
 
-        {/* Charts Row — RAG donut (narrow) + Volume bar (wide) */}
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-5 mb-5">
+        {/* Charts Row â€” RAG donut (narrow) + Volume bar (wide) */}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-6">
           <div className="lg:col-span-2">
             <RagDistributionChart
               data={dashboardData?.kpis.ragDistribution}
@@ -166,15 +207,15 @@ export default function MCRDashboardPage() {
           </div>
         </div>
 
-        {/* QA Indicators — full width */}
-        <div className="mb-5">
+        {/* QA Indicators â€” full width */}
+        <div className="mb-6">
           <QaIndicatorsTrendChart
             data={dashboardData?.charts.qaIndicatorsTrends}
             isLoading={isLoading}
           />
         </div>
 
-        {/* Recent Activity — full width */}
+        {/* Recent Activity â€” full width */}
         <RecentActivityList
           activities={dashboardData?.recentActivity}
           isLoading={isLoading}
@@ -183,3 +224,4 @@ export default function MCRDashboardPage() {
     </div>
   );
 }
+

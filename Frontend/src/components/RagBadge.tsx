@@ -1,12 +1,14 @@
 import type { RagStatus } from '../types/mcr';
 
 interface RagBadgeProps {
-  status: RagStatus;
+  status: RagStatus | string | undefined | null;
   size?: 'sm' | 'md' | 'lg';
   showLabel?: boolean;
 }
 
 export default function RagBadge({ status, size = 'md', showLabel = true }: RagBadgeProps) {
+  const normalizedStatus = String(status || '').trim().toLowerCase() as 'green' | 'amber' | 'red' | '';
+
   const sizeClasses = {
     sm: 'px-2 py-0.5 text-xs',
     md: 'px-3 py-1 text-sm',
@@ -31,12 +33,16 @@ export default function RagBadge({ status, size = 'md', showLabel = true }: RagB
     red: 'Red',
   };
 
+  if (!normalizedStatus || !(normalizedStatus in colorClasses)) {
+    return null;
+  }
+
   return (
     <span
-      className={`inline-flex items-center gap-1.5 font-medium rounded-full border whitespace-nowrap ${sizeClasses[size]} ${colorClasses[status]}`}
+      className={`inline-flex items-center gap-1.5 font-medium rounded-full border whitespace-nowrap ${sizeClasses[size]} ${colorClasses[normalizedStatus]}`}
     >
-      <i className={iconClasses[status]}></i>
-      {showLabel && labels[status]}
+      <i className={iconClasses[normalizedStatus]}></i>
+      {showLabel && labels[normalizedStatus]}
     </span>
   );
 }

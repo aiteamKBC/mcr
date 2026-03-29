@@ -1,11 +1,12 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import CommunicationModal from './CommunicationModal';
 
 interface ReviewActionsProps {
   reviewId: string;
+  coachName: string;
 }
 
-export default function ReviewActions({ reviewId }: ReviewActionsProps) {
+export default function ReviewActions({ reviewId, coachName }: ReviewActionsProps) {
   const [showCommunicationModal, setShowCommunicationModal] = useState(false);
 
   const handlePrint = () => {
@@ -27,7 +28,7 @@ export default function ReviewActions({ reviewId }: ReviewActionsProps) {
             </button>
             <button
               onClick={() => setShowCommunicationModal(true)}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-white bg-teal-500 rounded-lg hover:bg-teal-600 transition-colors cursor-pointer whitespace-nowrap shadow-sm"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-white bg-indigo-500 rounded-lg hover:bg-indigo-600 transition-colors cursor-pointer whitespace-nowrap shadow-sm"
             >
               <i className="ri-mail-send-line text-sm"></i>
               Mark Communicated
@@ -39,10 +40,12 @@ export default function ReviewActions({ reviewId }: ReviewActionsProps) {
       {showCommunicationModal && (
         <CommunicationModal
           reviewId={reviewId}
+          coachName={coachName}
           onClose={() => setShowCommunicationModal(false)}
         />
       )}
     </>
   );
 }
+
 

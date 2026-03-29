@@ -1,4 +1,3 @@
-
 import type { DashboardKpis } from '../../../types/mcr';
 
 interface KpiCardsProps {
@@ -34,18 +33,18 @@ const cards = [
     label: 'Avg QA Score',
     sub: 'Quality assessment',
     icon: 'ri-star-line',
-    accent: '#f59e0b',
-    bg: 'from-amber-50 to-white',
-    border: 'border-amber-100',
-    iconBg: 'bg-amber-500',
-    textColor: 'text-amber-600',
+    accent: '#3b82f6',
+    bg: 'from-blue-50 to-white',
+    border: 'border-blue-100',
+    iconBg: 'bg-blue-500',
+    textColor: 'text-blue-600',
   },
   {
     key: 'safeguardingCompletionRate',
     label: 'Safeguarding',
     sub: 'Completion rate',
     icon: 'ri-shield-check-line',
-    accent: '#ef4444',
+    accent: '#f43f5e',
     bg: 'from-rose-50 to-white',
     border: 'border-rose-100',
     iconBg: 'bg-rose-500',
@@ -56,20 +55,20 @@ const cards = [
     label: 'Satisfaction',
     sub: 'Learner feedback (APTEM)',
     icon: 'ri-emotion-happy-line',
-    accent: '#14b8a6',
-    bg: 'from-teal-50 to-white',
-    border: 'border-teal-100',
-    iconBg: 'bg-teal-500',
-    textColor: 'text-teal-600',
+    accent: '#8b5cf6',
+    bg: 'from-violet-50 to-white',
+    border: 'border-violet-100',
+    iconBg: 'bg-violet-500',
+    textColor: 'text-violet-600',
   },
 ];
 
 export default function KpiCards({ kpis, isLoading }: KpiCardsProps) {
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5 mb-6">
         {[...Array(5)].map((_, i) => (
-          <div key={i} className="bg-white rounded-xl border border-slate-100 p-5 animate-pulse">
+          <div key={i} className="bg-white/85 rounded-[24px] border border-white/80 p-6 shadow-[0_12px_30px_rgba(15,23,42,0.04)] animate-pulse">
             <div className="flex items-center justify-between mb-4">
               <div className="w-9 h-9 bg-slate-100 rounded-lg"></div>
               <div className="h-4 w-12 bg-slate-100 rounded-full"></div>
@@ -86,63 +85,77 @@ export default function KpiCards({ kpis, isLoading }: KpiCardsProps) {
 
   const total = kpis.ragDistribution.green + kpis.ragDistribution.amber + kpis.ragDistribution.red;
   const greenPct = total > 0 ? Math.round((kpis.ragDistribution.green / total) * 100) : 0;
+  const qaScoreDisplayed = Number(kpis.averageQaScore.toFixed(1));
+  const qaScorePct = Math.min(100, Math.max(0, Math.round((qaScoreDisplayed / 5) * 100)));
+  const safeguardingScoreDisplayed = Math.round((kpis.safeguardingCompletionRate / 20) * 10) / 10;
+  const satisfactionScoreDisplayed = Number(kpis.averageSatisfaction.toFixed(1));
+  const satisfactionPct = Math.min(100, Math.max(0, Math.round((satisfactionScoreDisplayed / 5) * 100)));
 
   const getValue = (key: string) => {
     switch (key) {
       case 'totalMcrs': return { main: kpis.totalMcrs.toString(), suffix: '', badge: null };
       case 'green': return { main: kpis.ragDistribution.green.toString(), suffix: '', badge: `${greenPct}%` };
-      case 'averageQaScore': return { main: kpis.averageQaScore.toFixed(1), suffix: '/5.0', badge: null };
-      case 'safeguardingCompletionRate': return { main: kpis.safeguardingCompletionRate.toString(), suffix: '%', badge: null };
-      case 'averageSatisfaction': return { main: kpis.averageSatisfaction.toFixed(1), suffix: '/5.0', badge: null };
-      default: return { main: '—', suffix: '', badge: null };
+      case 'averageQaScore':
+        return { main: qaScoreDisplayed.toFixed(1), suffix: '/5.0', badge: `${qaScorePct}%` };
+      case 'safeguardingCompletionRate':
+        return { main: safeguardingScoreDisplayed.toFixed(1), suffix: '/5.0', badge: `${kpis.safeguardingCompletionRate}%` };
+      case 'averageSatisfaction':
+        return { main: satisfactionScoreDisplayed.toFixed(1), suffix: '/5.0', badge: `${satisfactionPct}%` };
+      default:
+        return { main: '-', suffix: '', badge: null };
     }
   };
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-5">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5 mb-6">
       {cards.map((card) => {
         const { main, suffix, badge } = getValue(card.key);
         const isPercent = card.key === 'safeguardingCompletionRate';
+        const progressPercent = card.key === 'safeguardingCompletionRate'
+          ? kpis.safeguardingCompletionRate
+          : card.key === 'averageSatisfaction'
+          ? satisfactionPct
+          : null;
 
         return (
           <div
             key={card.key}
-            className={`relative bg-gradient-to-br ${card.bg} rounded-xl border ${card.border} p-5 overflow-hidden group hover:shadow-md transition-all duration-200`}
+            className={`relative overflow-hidden rounded-[26px] border ${card.border} bg-gradient-to-br ${card.bg} p-6 shadow-[0_16px_40px_rgba(15,23,42,0.05)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_48px_rgba(15,23,42,0.10)]`}
           >
-            {/* Decorative circle */}
+            <div className="absolute inset-x-6 bottom-0 h-px bg-gradient-to-r from-transparent via-white/90 to-transparent"></div>
             <div
-              className="absolute -top-4 -right-4 w-20 h-20 rounded-full opacity-[0.07]"
+              className="absolute -top-5 -right-5 h-24 w-24 rounded-full opacity-[0.08]"
+              style={{ backgroundColor: card.accent }}
+            ></div>
+            <div
+              className="absolute right-6 top-6 h-16 w-16 rounded-full blur-2xl opacity-20"
               style={{ backgroundColor: card.accent }}
             ></div>
 
-            {/* Top row */}
-            <div className="flex items-start justify-between mb-4">
-              <div className={`w-9 h-9 ${card.iconBg} rounded-lg flex items-center justify-center shadow-sm`}>
+            <div className="mb-5 flex items-start justify-between">
+              <div className={`flex h-11 w-11 items-center justify-center rounded-2xl ${card.iconBg} shadow-sm`}>
                 <i className={`${card.icon} text-white text-base`}></i>
               </div>
               {badge && (
-                <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${card.textColor} bg-white/80 border ${card.border}`}>
+                <span className={`rounded-full border ${card.border} bg-white/85 px-2.5 py-1 text-sm font-bold ${card.textColor}`}>
                   {badge}
                 </span>
               )}
             </div>
 
-            {/* Value */}
-            <div className="flex items-baseline gap-1 mb-1">
-              <span className="text-2xl font-extrabold text-slate-900 tracking-tight">{main}</span>
-              {suffix && <span className="text-sm font-medium text-slate-400">{suffix}</span>}
+            <div className="mb-2 flex items-baseline gap-1.5">
+              <span className="text-[30px] font-black tracking-tight text-slate-900">{main}</span>
+              {suffix && <span className="text-sm font-semibold text-slate-400">{suffix}</span>}
             </div>
 
-            {/* Label */}
-            <p className="text-xs font-semibold text-slate-600">{card.label}</p>
-            <p className="text-xs text-slate-400 mt-0.5">{card.sub}</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">{card.label}</p>
+            <p className="mt-1 text-sm text-slate-600">{card.sub}</p>
 
-            {/* Progress bar for percentage metrics */}
-            {isPercent && (
-              <div className="mt-3 h-1 bg-white/60 rounded-full overflow-hidden">
+            {isPercent && progressPercent !== null && (
+              <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-white/70">
                 <div
                   className="h-full rounded-full transition-all duration-700"
-                  style={{ width: `${main}%`, backgroundColor: card.accent }}
+                  style={{ width: `${progressPercent}%`, backgroundColor: card.accent }}
                 ></div>
               </div>
             )}

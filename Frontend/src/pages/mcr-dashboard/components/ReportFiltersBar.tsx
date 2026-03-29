@@ -25,10 +25,10 @@ export default function ReportFiltersBar({
     <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 mb-5">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <i className="ri-filter-3-line text-teal-600"></i>
+          <i className="ri-filter-3-line text-indigo-600"></i>
           <span className="text-sm font-semibold text-gray-800">Filters</span>
           {activeCount > 0 && (
-            <span className="px-2 py-0.5 bg-teal-100 text-teal-700 text-xs font-medium rounded-full">
+            <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-xs font-medium rounded-full">
               {activeCount} active
             </span>
           )}
@@ -60,7 +60,7 @@ export default function ReportFiltersBar({
               type="date"
               value={filters.dateFrom || ''}
               onChange={(e) => onChange({ dateFrom: e.target.value || undefined })}
-              className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-400 focus:border-transparent outline-none transition-all"
+              className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-transparent outline-none transition-all"
             />
           </div>
 
@@ -71,7 +71,7 @@ export default function ReportFiltersBar({
               type="date"
               value={filters.dateTo || ''}
               onChange={(e) => onChange({ dateTo: e.target.value || undefined })}
-              className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-400 focus:border-transparent outline-none transition-all"
+              className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-transparent outline-none transition-all"
             />
           </div>
 
@@ -81,7 +81,7 @@ export default function ReportFiltersBar({
             <select
               value={filters.status || ''}
               onChange={(e) => onChange({ status: (e.target.value as ReportStatus) || undefined })}
-              className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-400 focus:border-transparent outline-none transition-all cursor-pointer"
+              className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-transparent outline-none transition-all cursor-pointer"
             >
               <option value="">All Statuses</option>
               <option value="completed">Completed</option>
@@ -97,7 +97,7 @@ export default function ReportFiltersBar({
             <select
               value={filters.model || ''}
               onChange={(e) => onChange({ model: e.target.value || undefined })}
-              className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-400 focus:border-transparent outline-none transition-all cursor-pointer"
+              className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-transparent outline-none transition-all cursor-pointer"
             >
               <option value="">All Models</option>
               {models.map((m) => (
@@ -112,7 +112,7 @@ export default function ReportFiltersBar({
             <select
               value={filters.prompt_version || ''}
               onChange={(e) => onChange({ prompt_version: e.target.value || undefined })}
-              className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-400 focus:border-transparent outline-none transition-all cursor-pointer"
+              className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-transparent outline-none transition-all cursor-pointer"
             >
               <option value="">All Versions</option>
               {promptVersions.map((v) => (
@@ -125,3 +125,4 @@ export default function ReportFiltersBar({
     </div>
   );
 }
+

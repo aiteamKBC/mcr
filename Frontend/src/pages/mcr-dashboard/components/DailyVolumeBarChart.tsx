@@ -109,7 +109,7 @@ export default function DailyVolumeBarChart({ data, isLoading }: DailyVolumeBarC
             const isLast = index === data.length - 1;
 
             const fillStart = isPeak ? '#10b981' : isLast ? '#6366f1' : '#94a3b8';
-            const fillEnd   = isPeak ? '#34d399' : isLast ? '#818cf8' : '#cbd5e1';
+            const fillEnd   = isPeak ? '#34d399' : isLast ? '#a78bfa' : '#cbd5e1';
             const gradId    = `grad-${index}`;
 
             return (
@@ -167,16 +167,16 @@ export default function DailyVolumeBarChart({ data, isLoading }: DailyVolumeBarC
 
       {/* Summary Stats */}
       <div className="grid grid-cols-3 gap-3 mt-4">
-        <div className="bg-slate-50 rounded-xl p-3 text-center border border-slate-100">
-          <p className="text-lg font-extrabold text-slate-800">{totalCount}</p>
+        <div className="bg-emerald-50/70 rounded-xl p-3 text-center border border-emerald-100">
+          <p className="text-lg font-extrabold text-emerald-800">{totalCount}</p>
           <p className="text-xs text-slate-400 mt-0.5 font-medium">Total</p>
         </div>
         <div className="bg-emerald-50 rounded-xl p-3 text-center border border-emerald-100">
           <p className="text-lg font-extrabold text-emerald-700">{peakCount}</p>
           <p className="text-xs text-slate-400 mt-0.5 font-medium">Peak</p>
         </div>
-        <div className="bg-slate-50 rounded-xl p-3 text-center border border-slate-100">
-          <p className="text-lg font-extrabold text-slate-700">{avgCount.toFixed(1)}</p>
+        <div className="bg-indigo-50/70 rounded-xl p-3 text-center border border-indigo-100">
+          <p className="text-lg font-extrabold text-indigo-700">{avgCount.toFixed(1)}</p>
           <p className="text-xs text-slate-400 mt-0.5 font-medium">Avg / mo</p>
         </div>
       </div>
@@ -201,3 +201,4 @@ export default function DailyVolumeBarChart({ data, isLoading }: DailyVolumeBarC
     </div>
   );
 }
+

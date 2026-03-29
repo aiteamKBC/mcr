@@ -52,8 +52,8 @@ export default function ReportStatusChart({ records }: ReportStatusChartProps) {
       {/* Status Pie */}
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
         <div className="flex items-center gap-2 mb-5">
-          <div className="w-8 h-8 bg-teal-50 rounded-lg flex items-center justify-center">
-            <i className="ri-pie-chart-2-line text-teal-600"></i>
+          <div className="w-8 h-8 bg-indigo-50 rounded-lg flex items-center justify-center">
+            <i className="ri-pie-chart-2-line text-indigo-600"></i>
           </div>
           <h3 className="text-sm font-semibold text-gray-800">Status Breakdown</h3>
         </div>
@@ -121,3 +121,4 @@ export default function ReportStatusChart({ records }: ReportStatusChartProps) {
     </div>
   );
 }
+

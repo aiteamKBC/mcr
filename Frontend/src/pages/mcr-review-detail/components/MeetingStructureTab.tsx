@@ -6,13 +6,13 @@ interface MeetingStructureTabProps {
 }
 
 const getVarianceColor = (v: number) =>
-  v > 0 ? 'text-red-600' : v < 0 ? 'text-sky-600' : 'text-emerald-600';
+  v > 0 ? 'text-red-600' : v < 0 ? 'text-blue-600' : 'text-emerald-600';
 
 const getBarColor = (v: number) =>
-  v > 0 ? 'bg-red-400' : v < 0 ? 'bg-sky-400' : 'bg-emerald-400';
+  v > 0 ? 'bg-red-400' : v < 0 ? 'bg-blue-400' : 'bg-emerald-400';
 
 const getStatusBg = (v: number) =>
-  v > 0 ? 'bg-red-50 border-red-100' : v < 0 ? 'bg-sky-50 border-sky-100' : 'bg-emerald-50 border-emerald-100';
+  v > 0 ? 'bg-red-50 border-red-100' : v < 0 ? 'bg-blue-50 border-blue-100' : 'bg-emerald-50 border-emerald-100';
 
 export default function MeetingStructureTab({ review }: MeetingStructureTabProps) {
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -32,13 +32,13 @@ export default function MeetingStructureTab({ review }: MeetingStructureTabProps
       <div className="grid grid-cols-3 gap-4">
         {[
           { label: 'Planned Duration', value: `${totalPlanned} min`, icon: 'ri-calendar-check-line', color: 'text-gray-700', bg: 'bg-gray-50' },
-          { label: 'Actual Duration', value: `${review.totalDurationMin} min`, icon: 'ri-time-line', color: 'text-teal-700', bg: 'bg-teal-50' },
+          { label: 'Actual Duration', value: `${review.totalDurationMin} min`, icon: 'ri-time-line', color: 'text-indigo-700', bg: 'bg-indigo-50' },
           {
             label: 'Total Variance',
             value: `${totalVariance > 0 ? '+' : ''}${totalVariance} min (${totalVariance > 0 ? '+' : ''}${variancePct}%)`,
             icon: totalVariance > 0 ? 'ri-arrow-up-line' : totalVariance < 0 ? 'ri-arrow-down-line' : 'ri-check-line',
             color: getVarianceColor(totalVariance),
-            bg: totalVariance > 0 ? 'bg-red-50' : totalVariance < 0 ? 'bg-sky-50' : 'bg-emerald-50',
+            bg: totalVariance > 0 ? 'bg-red-50' : totalVariance < 0 ? 'bg-blue-50' : 'bg-emerald-50',
           },
         ].map((kpi) => (
           <div key={kpi.label} className={`rounded-xl border border-gray-100 ${kpi.bg} px-5 py-4 flex items-center gap-3`}>
@@ -55,7 +55,7 @@ export default function MeetingStructureTab({ review }: MeetingStructureTabProps
 
       <div className="bg-white rounded-xl border border-gray-100">
         <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
-          <i className="ri-list-ordered text-teal-500"></i>
+          <i className="ri-list-ordered text-indigo-500"></i>
           <h3 className="text-sm font-bold text-gray-900">Meeting Timeline</h3>
           <span className="ml-auto text-xs text-gray-400">{review.meetingSections.length} sections</span>
         </div>
@@ -72,8 +72,8 @@ export default function MeetingStructureTab({ review }: MeetingStructureTabProps
                   className="flex items-center gap-4 cursor-pointer"
                   onClick={() => setExpanded(isOpen ? null : section.sectionKey)}
                 >
-                  <div className="w-7 h-7 rounded-full bg-teal-50 border border-teal-100 flex items-center justify-center flex-shrink-0">
-                    <span className="text-xs font-bold text-teal-600">{idx + 1}</span>
+                  <div className="w-7 h-7 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center flex-shrink-0">
+                    <span className="text-xs font-bold text-indigo-600">{idx + 1}</span>
                   </div>
 
                   <div className="flex-1 min-w-0">
@@ -120,3 +120,4 @@ export default function MeetingStructureTab({ review }: MeetingStructureTabProps
     </div>
   );
 }
+

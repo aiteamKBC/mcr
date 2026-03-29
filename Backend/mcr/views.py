@@ -1,6 +1,11 @@
-﻿import json
+import json
+from collections import defaultdict
+from datetime import date, datetime
+from email.utils import formataddr
 from html import escape
 
+from django.conf import settings
+from django.core.mail import send_mail
 from django.db import connection
 from django.http import Http404, HttpResponse
 from rest_framework import viewsets
@@ -9,10 +14,16 @@ from rest_framework.response import Response
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 
-from .serializers import BookingSessionSerializer, DashboardMcrReviewDetailSerializer
+from .models import CommunicationLogEntry, DashboardReviewCommunication
+from .serializers import (
+    BookingSessionSerializer,
+    DashboardMcrReviewDetailSerializer,
+    DashboardReviewCommunicationCreateSerializer,
+)
 
 
 class McrReviewViewSet(viewsets.ViewSet):
+    DISPLAY_CUTOFF_DATE = date(2026, 3, 1)
     SUMMARY_TABLE_CANDIDATES = (
         "booking_summaries",
         "MCM_booking_summaries",
@@ -56,6 +67,31 @@ class McrReviewViewSet(viewsets.ViewSet):
             return int(value)
         except (TypeError, ValueError):
             return default
+
+    def _date_only(self, value):
+        if value is None:
+            return None
+        if isinstance(value, datetime):
+            return value.date()
+        if isinstance(value, date):
+            return value
+        s = str(value).strip()
+        if len(s) >= 10 and s[4] == "-" and s[7] == "-":
+            try:
+                return date.fromisoformat(s[:10])
+            except ValueError:
+                return None
+        return None
+
+    def _review_visible_from_row(self, row):
+        summary_text_payload = self._parse_summary(row.get("summary_text"))
+        summary_json_payload = self._parse_summary(row.get("summary_json"))
+        summary = summary_text_payload or summary_json_payload
+
+        review_date = self._date_only(summary.get("date")) or self._date_only(row.get("created_at"))
+        if review_date is None:
+            return True
+        return review_date >= self.DISPLAY_CUTOFF_DATE
 
     def _map_row(self, row):
         summary_text_payload = self._parse_summary(row.get("summary_text"))
@@ -128,8 +164,10 @@ class McrReviewViewSet(viewsets.ViewSet):
                 f"""
                 SELECT id, status, summary_json, summary_text, created_at, booking_id
                 FROM {summary_table}
+                WHERE created_at >= %s
                 ORDER BY created_at DESC NULLS LAST, id DESC
-                """
+                """,
+                [self.DISPLAY_CUTOFF_DATE.isoformat()],
             )
             return self._dictfetchall(cursor)
 
@@ -144,9 +182,10 @@ class McrReviewViewSet(viewsets.ViewSet):
                 SELECT id, status, summary_json, summary_text, created_at, booking_id
                 FROM {summary_table}
                 WHERE id = %s
+                  AND created_at >= %s
                 LIMIT 1
                 """,
-                [review_id],
+                [review_id, self.DISPLAY_CUTOFF_DATE.isoformat()],
             )
             rows = self._dictfetchall(cursor)
         return rows[0] if rows else None
@@ -185,21 +224,175 @@ class McrReviewViewSet(viewsets.ViewSet):
             )
             return self._dictfetchall(cursor)
 
+    def _iso_date_only(self, value):
+        if value is None:
+            return None
+        if isinstance(value, datetime):
+            return value.date().isoformat()
+        if isinstance(value, date):
+            return value.isoformat()
+        s = str(value).strip()
+        if len(s) >= 10 and s[4] == "-" and s[7] == "-":
+            return s[:10]
+        return None
+
+    def _iso_datetime(self, value):
+        if value is None:
+            return None
+        if isinstance(value, datetime):
+            return value.isoformat()
+        s = str(value).strip()
+        return s or None
+
+    def _fetch_sessions_for_bookings(self, booking_ids: list):
+        ids = []
+        seen = set()
+        for bid in booking_ids:
+            if bid is None:
+                continue
+            key = str(bid).strip()
+            if key and key not in seen:
+                seen.add(key)
+                ids.append(bid)
+        if not ids:
+            return {}
+
+        sessions_table_name = self._resolve_table_name(self.SESSION_TABLE_CANDIDATES)
+        if not sessions_table_name:
+            return {}
+        sessions_table = connection.ops.quote_name(sessions_table_name)
+        placeholders = ",".join(["%s"] * len(ids))
+        with connection.cursor() as cursor:
+            cursor.execute(
+                f"""
+                SELECT
+                    booking_id,
+                    day_date,
+                    created_at,
+                    updated_at
+                FROM {sessions_table}
+                WHERE booking_id IN ({placeholders})
+                ORDER BY booking_id, day_date DESC NULLS LAST, id DESC
+                """,
+                ids,
+            )
+            rows = self._dictfetchall(cursor)
+
+        best = {}
+        for r in rows:
+            bid = r.get("booking_id")
+            if bid is None:
+                continue
+            k = str(bid).strip()
+            if k and k not in best:
+                best[k] = r
+        return best
+
+    def _enrich_meeting_schedule_bulk(self, mapped_rows: list) -> None:
+        booking_keys = []
+        for m in mapped_rows:
+            bid = m.get("booking_id")
+            if bid is not None and str(bid).strip():
+                booking_keys.append(bid)
+        session_map = self._fetch_sessions_for_bookings(booking_keys)
+
+        for m in mapped_rows:
+            bid = m.get("booking_id")
+            k = str(bid).strip() if bid is not None else ""
+            sess = session_map.get(k) if k else None
+            summary_date = m.get("date")
+
+            if sess:
+                dd = sess.get("day_date")
+                if dd is not None:
+                    m["meeting_day_date"] = self._iso_date_only(dd)
+                elif summary_date:
+                    m["meeting_day_date"] = self._iso_date_only(summary_date)
+                else:
+                    m["meeting_day_date"] = None
+
+                ca = sess.get("created_at")
+                starts_at = None
+                if ca is not None:
+                    if isinstance(ca, datetime) and dd is not None:
+                        dd_norm = dd.date() if isinstance(dd, datetime) else (dd if isinstance(dd, date) else None)
+                        if dd_norm and ca.date() == dd_norm:
+                            starts_at = self._iso_datetime(ca)
+                    elif isinstance(ca, datetime) and dd is None:
+                        starts_at = self._iso_datetime(ca)
+                    elif not isinstance(ca, datetime):
+                        starts_at = self._iso_datetime(ca)
+                m["meeting_starts_at"] = starts_at
+            else:
+                m["meeting_day_date"] = self._iso_date_only(summary_date) if summary_date else None
+                m["meeting_starts_at"] = None
+
     def _get_row_or_404(self, pk):
         review_id = self._to_int_or_default(pk, default=None)
         if review_id is None:
             raise Http404
         row = self._fetch_one_row(review_id)
-        if not row:
+        if not row or not self._review_visible_from_row(row):
             raise Http404
         return row
 
     def _get_mapped_review_or_404(self, pk):
         return self._map_row(self._get_row_or_404(pk))
 
+    def _serialize_dashboard_communication(self, obj: DashboardReviewCommunication) -> dict:
+        return {
+            "id": obj.id,
+            "recipient_type": obj.recipient_type,
+            "sent_at": obj.sent_at.isoformat(),
+            "sent_by": obj.sent_by,
+            "status": obj.status,
+            "notes": obj.notes,
+        }
+
+    def _communications_by_review_ids(self, review_ids: list) -> dict:
+        ids = [i for i in review_ids if i is not None]
+        if not ids:
+            return {}
+        out: dict = defaultdict(list)
+        for obj in DashboardReviewCommunication.objects.filter(review_id__in=ids).order_by(
+            "sent_at", "id"
+        ):
+            out[obj.review_id].append(self._serialize_dashboard_communication(obj))
+        return dict(out)
+
+    def _attach_communications_bulk(self, rows: list) -> None:
+        ids = [r.get("id") for r in rows if r.get("id") is not None]
+        comm_map = self._communications_by_review_ids(ids)
+        for r in rows:
+            rid = r.get("id")
+            r["communications"] = comm_map.get(rid, []) if rid is not None else []
+
+    def _resolve_communication_email(self, sessions: list, recipient_type: str) -> str | None:
+        if recipient_type == CommunicationLogEntry.REC_QA:
+            addr = (getattr(settings, "MCR_QA_NOTIFICATION_EMAIL", None) or "").strip()
+            return addr or None
+        if not sessions:
+            return None
+        s = sessions[0]
+        if recipient_type == CommunicationLogEntry.REC_LEARNER:
+            return (str(s.get("customer_email") or "").strip()) or None
+        if recipient_type == CommunicationLogEntry.REC_EMPLOYER:
+            raw = str(s.get("staff_emails") or "").strip()
+            if not raw:
+                return None
+            first = raw.split(",")[0].strip()
+            return first or None
+        return None
+
     @extend_schema(responses=DashboardMcrReviewDetailSerializer(many=True))
     def list(self, request):
-        mapped = [self._map_row(row) for row in self._fetch_all_rows()]
+        mapped = [
+            self._map_row(row)
+            for row in self._fetch_all_rows()
+            if self._review_visible_from_row(row)
+        ]
+        self._enrich_meeting_schedule_bulk(mapped)
+        self._attach_communications_bulk(mapped)
         serializer = DashboardMcrReviewDetailSerializer(instance=mapped, many=True)
         return Response(serializer.data)
 
@@ -209,6 +402,8 @@ class McrReviewViewSet(viewsets.ViewSet):
     )
     def retrieve(self, request, pk=None):
         mapped = self._get_mapped_review_or_404(pk)
+        self._enrich_meeting_schedule_bulk([mapped])
+        self._attach_communications_bulk([mapped])
         serializer = DashboardMcrReviewDetailSerializer(instance=mapped)
         return Response(serializer.data)
 
@@ -236,30 +431,8 @@ class McrReviewViewSet(viewsets.ViewSet):
     )
     @action(detail=True, methods=["get"], url_path="created_at")
     def created_at(self, request, pk=None):
-        review_id = self._to_int_or_default(pk, default=None)
-        if review_id is None:
-            raise Http404
-
-        summary_table_name = self._resolve_table_name(self.SUMMARY_TABLE_CANDIDATES)
-        if not summary_table_name:
-            raise Http404
-        summary_table = connection.ops.quote_name(summary_table_name)
-        with connection.cursor() as cursor:
-            cursor.execute(
-                f"""
-                SELECT created_at::text
-                FROM {summary_table}
-                WHERE id = %s
-                LIMIT 1
-                """,
-                [review_id],
-            )
-            row = cursor.fetchone()
-
-        if not row:
-            raise Http404
-
-        return Response({"created_at": row[0]})
+        row = self._get_row_or_404(pk)
+        return Response({"created_at": self._iso_datetime(row.get("created_at"))})
 
     @extend_schema(
         parameters=[OpenApiParameter(name="id", location=OpenApiParameter.PATH, type=int)],
@@ -271,6 +444,67 @@ class McrReviewViewSet(viewsets.ViewSet):
         sessions = self._fetch_sessions_by_booking_id(row.get("booking_id"))
         serializer = BookingSessionSerializer(instance=sessions, many=True)
         return Response(serializer.data)
+
+    @extend_schema(
+        parameters=[OpenApiParameter(name="id", location=OpenApiParameter.PATH, type=int)],
+        request=DashboardReviewCommunicationCreateSerializer,
+        responses={201: OpenApiTypes.OBJECT},
+    )
+    @action(detail=True, methods=["post"], url_path="communications")
+    def communications(self, request, pk=None):
+        _ = self._get_row_or_404(pk)
+        review = self._get_mapped_review_or_404(pk)
+        ser = DashboardReviewCommunicationCreateSerializer(data=request.data)
+        ser.is_valid(raise_exception=True)
+        recipient = ser.validated_data["recipient_type"]
+        notes = ser.validated_data.get("notes") or ""
+        coach_name = str(review.get("coach_name") or "").strip()
+        sent_by = str(ser.validated_data.get("sent_by") or "").strip() or coach_name or "Coach"
+        sessions = self._fetch_sessions_by_booking_id(review.get("booking_id"))
+        to_email = self._resolve_communication_email(sessions, recipient)
+        if not to_email:
+            return Response(
+                {
+                    "detail": (
+                        "No email address available for this recipient. "
+                        "Use learner/customer or staff emails from the booking session, "
+                        "or set MCR_QA_NOTIFICATION_EMAIL for QA."
+                    )
+                },
+                status=400,
+            )
+        subject = f"MCR review #{pk} — notification ({recipient})"
+        body = (
+            f"This message was logged from the MCR dashboard.\n\n"
+            f"Recipient: {recipient}\n"
+            f"Sent by: {sent_by}\n\n"
+            f"{notes}\n"
+        )
+        try:
+            send_mail(
+                subject=subject,
+                message=body,
+                from_email=formataddr((sent_by, settings.DEFAULT_FROM_EMAIL)),
+                recipient_list=[to_email],
+                fail_silently=False,
+            )
+            status = CommunicationLogEntry.STATUS_SENT
+        except Exception as exc:  # noqa: BLE001
+            return Response(
+                {"detail": f"Email could not be sent: {exc!s}"},
+                status=502,
+            )
+        rid = self._to_int_or_default(pk, default=None)
+        if rid is None:
+            raise Http404
+        obj = DashboardReviewCommunication.objects.create(
+            review_id=rid,
+            recipient_type=recipient,
+            sent_by=sent_by,
+            status=status,
+            notes=notes,
+        )
+        return Response(self._serialize_dashboard_communication(obj), status=201)
 
     @extend_schema(
         parameters=[OpenApiParameter(name="id", location=OpenApiParameter.PATH, type=int)],
@@ -302,4 +536,3 @@ class McrReviewViewSet(viewsets.ViewSet):
         resp = HttpResponse(html, content_type="text/html; charset=utf-8")
         resp["Content-Disposition"] = f'attachment; filename="mcr_{review["id"]}.html"'
         return resp
-

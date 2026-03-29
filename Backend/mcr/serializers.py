@@ -1,7 +1,7 @@
-﻿from rest_framework import serializers
+from rest_framework import serializers
 from .models import (
     McrReview, MeetingSectionTiming, QaIndicatorEvaluation,
-    SafeguardingChecklistItem, EvidenceItem, Attachment, CommunicationLogEntry
+    SafeguardingChecklistItem, EvidenceItem, Attachment, CommunicationLogEntry,
 )
 
 
@@ -95,6 +95,17 @@ class DashboardMcrReviewListSerializer(serializers.Serializer):
     updated_at = serializers.DateTimeField(allow_null=True, required=False)
     safeguarding_flagged = serializers.BooleanField(default=False)
     satisfaction_score = serializers.IntegerField(allow_null=True, required=False)
+    communications = serializers.ListField(
+        child=serializers.DictField(), required=False, default=list
+    )
+    meeting_day_date = serializers.CharField(allow_blank=True, allow_null=True, required=False)
+    meeting_starts_at = serializers.CharField(allow_blank=True, allow_null=True, required=False)
+
+
+class DashboardReviewCommunicationCreateSerializer(serializers.Serializer):
+    recipient_type = serializers.ChoiceField(choices=CommunicationLogEntry.REC_CHOICES)
+    notes = serializers.CharField(allow_blank=True, default="")
+    sent_by = serializers.CharField(allow_blank=True, default="")
 
 
 class DashboardMcrReviewDetailSerializer(DashboardMcrReviewListSerializer):

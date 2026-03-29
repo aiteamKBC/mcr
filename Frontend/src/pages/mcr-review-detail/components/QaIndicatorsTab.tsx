@@ -41,7 +41,7 @@ export default function QaIndicatorsTab({ review }: QaIndicatorsTabProps) {
 
   const getOverallLabel = (score: number) => {
     if (score >= 4.5) return { label: 'Outstanding', color: 'text-emerald-700', bg: 'bg-emerald-50', border: 'border-emerald-200' };
-    if (score >= 4.0) return { label: 'Strong',       color: 'text-teal-700',    bg: 'bg-teal-50',    border: 'border-teal-200' };
+    if (score >= 4.0) return { label: 'Strong',       color: 'text-indigo-700',    bg: 'bg-indigo-50',    border: 'border-indigo-200' };
     if (score >= 3.0) return { label: 'Requires Improvement', color: 'text-amber-700', bg: 'bg-amber-50', border: 'border-amber-200' };
     return { label: 'Cause for Concern', color: 'text-red-700', bg: 'bg-red-50', border: 'border-red-200' };
   };
@@ -51,7 +51,7 @@ export default function QaIndicatorsTab({ review }: QaIndicatorsTabProps) {
   return (
     <div className="space-y-5">
 
-      {/* ── Overall Score Banner ── */}
+      {/* â”€â”€ Overall Score Banner â”€â”€ */}
       <div className={`rounded-xl border ${overall.border} ${overall.bg} px-6 py-5 flex items-center justify-between`}>
         <div className="flex items-center gap-4">
           <div className="w-14 h-14 rounded-xl bg-white/80 shadow-sm flex flex-col items-center justify-center">
@@ -78,7 +78,7 @@ export default function QaIndicatorsTab({ review }: QaIndicatorsTabProps) {
         </div>
       </div>
 
-      {/* ── Indicator Cards ── */}
+      {/* â”€â”€ Indicator Cards â”€â”€ */}
       <div className="bg-white rounded-xl border border-gray-100 divide-y divide-gray-50">
         {indicators.map((ind, idx) => {
           const label = INDICATOR_LABELS[ind.indicatorKey] ?? ind.indicatorName;
@@ -140,7 +140,7 @@ export default function QaIndicatorsTab({ review }: QaIndicatorsTabProps) {
                           href={url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 px-2.5 py-1 bg-teal-50 text-teal-700 border border-teal-100 rounded-lg text-xs font-medium hover:bg-teal-100 transition-colors cursor-pointer whitespace-nowrap"
+                          className="inline-flex items-center gap-1 px-2.5 py-1 bg-indigo-50 text-indigo-700 border border-indigo-100 rounded-lg text-xs font-medium hover:bg-indigo-100 transition-colors cursor-pointer whitespace-nowrap"
                         >
                           <i className="ri-external-link-line text-xs"></i>
                           Evidence {i + 1}
@@ -155,14 +155,14 @@ export default function QaIndicatorsTab({ review }: QaIndicatorsTabProps) {
         })}
       </div>
 
-      {/* ── Score Distribution ── */}
+      {/* â”€â”€ Score Distribution â”€â”€ */}
       <div className="bg-white rounded-xl border border-gray-100 px-6 py-5">
         <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-4">Score Distribution</p>
         <div className="grid grid-cols-4 gap-4">
           {[
             { label: 'Highest',  value: Math.max(...indicators.map((i) => i.score0to5)).toFixed(1), color: 'text-emerald-700' },
             { label: 'Lowest',   value: Math.min(...indicators.map((i) => i.score0to5)).toFixed(1), color: 'text-red-600' },
-            { label: 'Average',  value: overallScore.toFixed(2), color: 'text-teal-700' },
+            { label: 'Average',  value: overallScore.toFixed(2), color: 'text-indigo-700' },
             { label: 'Indicators', value: `${indicators.length}`, color: 'text-gray-700' },
           ].map((s) => (
             <div key={s.label} className="text-center bg-gray-50 rounded-lg py-3 border border-gray-100">
@@ -176,5 +176,6 @@ export default function QaIndicatorsTab({ review }: QaIndicatorsTabProps) {
     </div>
   );
 }
+
 
 

@@ -136,7 +136,7 @@ export default function ModelPerformanceChart({ reports }: ModelPerformanceChart
                 <div className="bg-gray-50 rounded-lg p-3">
                   <div className="text-xs text-gray-600 mb-1">Avg Output</div>
                   <div className="flex items-center gap-1.5">
-                    <i className="ri-file-text-line text-blue-600 text-sm"></i>
+                    <i className="ri-file-text-line text-indigo-600 text-sm"></i>
                     <span className="text-sm font-semibold text-gray-900">
                       {stat.avgOutputChars.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                     </span>

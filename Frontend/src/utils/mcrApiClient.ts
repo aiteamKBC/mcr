@@ -1,4 +1,4 @@
-﻿import axios from 'axios';
+import axios from 'axios';
 import type {
   McrReview,
   McrReviewDetail,
@@ -15,6 +15,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 const USE_MOCKS = String(import.meta.env.VITE_USE_MCR_MOCKS || 'false').toLowerCase() === 'true';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const DISPLAY_CUTOFF_DATE = '2026-03-01';
 
 type RawQaItem = {
   metric?: string;
@@ -80,6 +81,8 @@ type RawReview = {
   qa?: RawQaItem[];
   communications?: RawCommunication[];
   attachments?: RawAttachment[];
+  meeting_day_date?: string | null;
+  meeting_starts_at?: string | null;
 };
 
 type QaTrendVector = {
@@ -123,6 +126,18 @@ const clampScore = (value: unknown): number => {
   return Math.max(0, Math.min(5, score));
 };
 
+const normalizeDisplayComment = (value: unknown): string => {
+  const text = String(value || '').trim();
+  if (!text) return '';
+
+  const lower = text.toLowerCase();
+  if (['yes', 'no', 'n/a', 'na', 'met', 'not met', 'green', 'amber', 'red'].includes(lower)) {
+    return '';
+  }
+
+  return text;
+};
+
 const toSlug = (value: string): string =>
   value
     .toLowerCase()
@@ -133,6 +148,43 @@ const toEntity = (prefix: string, name: string) => ({
   id: `${prefix}-${toSlug(name)}`,
   name: name || 'Unknown',
 });
+
+const toTitleCaseWords = (value: string): string =>
+  value
+    .split(' ')
+    .filter(Boolean)
+    .map((word) => {
+      if (word.length <= 1) return word.toUpperCase();
+      return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+    })
+    .join(' ');
+
+const normalizeLearnerDisplayName = (value: unknown, fallback = 'Unknown Learner'): string => {
+  const raw = String(value || '').trim();
+  if (!raw) return fallback;
+
+  let candidate = raw;
+
+  if (candidate.includes('|')) {
+    candidate = candidate.split('|')[0].trim();
+  }
+
+  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(candidate)) {
+    candidate = candidate.split('@')[0].trim();
+  }
+
+  candidate = candidate
+    .replace(/[._]+/g, ' ')
+    .replace(/-/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (!/[A-Za-z]/.test(candidate)) {
+    return fallback;
+  }
+
+  return toTitleCaseWords(candidate) || fallback;
+};
 
 const normalizeRagLower = (value: unknown): 'green' | 'amber' | 'red' => {
   const v = String(value || '').trim().toLowerCase();
@@ -444,6 +496,21 @@ const safeIsoDate = (value: string | undefined, fallback = new Date().toISOStrin
   return Number.isNaN(d.getTime()) ? fallback : d.toISOString();
 };
 
+const toIsoDateKey = (value: unknown): string => {
+  const text = String(value || '').trim();
+  if (!text) return '';
+  if (/^\d{4}-\d{2}-\d{2}/.test(text)) return text.slice(0, 10);
+
+  const d = new Date(text);
+  if (Number.isNaN(d.getTime())) return '';
+  return d.toISOString().slice(0, 10);
+};
+
+const reviewPassesDisplayCutoff = (raw: RawReview): boolean => {
+  const reviewDate = toIsoDateKey(raw.meeting_day_date || raw.date || raw.created_at);
+  return !reviewDate || reviewDate >= DISPLAY_CUTOFF_DATE;
+};
+
 const avgQaScoreFromIndicators = (qaIndicators: Array<{ score0to5: number }>): number => {
   if (qaIndicators.length === 0) return 0;
   return qaIndicators.reduce((sum, item) => sum + item.score0to5, 0) / qaIndicators.length;
@@ -460,6 +527,46 @@ const mapCommunicationLog = (communications: RawCommunication[]): CommunicationL
   }));
 };
 
+const entryCountsAsNotified = (entry: CommunicationLogEntry): boolean =>
+  entry.status === 'Sent' || entry.status === 'Delivered';
+
+const normalizeMeetingFields = (
+  raw: RawReview
+): { date: string; meetingDayDate: string | null; meetingStartsAt: string | null } => {
+  const meetingStartsAt = raw.meeting_starts_at ? String(raw.meeting_starts_at).trim() : null;
+  const meetingDayDate = raw.meeting_day_date
+    ? String(raw.meeting_day_date).trim().slice(0, 10)
+    : null;
+
+  if (meetingStartsAt) {
+    return {
+      date: meetingStartsAt,
+      meetingDayDate: meetingDayDate ?? null,
+      meetingStartsAt,
+    };
+  }
+  if (meetingDayDate) {
+    return {
+      date: `${meetingDayDate}T00:00:00`,
+      meetingDayDate,
+      meetingStartsAt: null,
+    };
+  }
+  const legacy = raw.date != null && raw.date !== '' ? String(raw.date).trim() : '';
+  if (/^\d{4}-\d{2}-\d{2}$/.test(legacy)) {
+    return {
+      date: `${legacy}T00:00:00`,
+      meetingDayDate: legacy,
+      meetingStartsAt: null,
+    };
+  }
+  return {
+    date: legacy || safeIsoDate(raw.created_at),
+    meetingDayDate: null,
+    meetingStartsAt: null,
+  };
+};
+
 const mapListReview = (raw: RawReview): McrReview => {
   const qaItems = asArray<RawQaItem>(raw.qa);
   const qaIndicators = mapQaIndicators(qaItems);
@@ -467,18 +574,27 @@ const mapListReview = (raw: RawReview): McrReview => {
   const listRating = deriveListRating(raw.qualitative_rating || raw.overall_rating?.qualitative, qaAverage);
   const communicationLog = mapCommunicationLog(asArray<RawCommunication>(raw.communications));
 
-  const communicatedToEmployer = communicationLog.some((entry) => entry.recipientType === 'Employer');
-  const communicatedToLearner = communicationLog.some((entry) => entry.recipientType === 'Learner');
-  const communicatedToQA = communicationLog.some((entry) => entry.recipientType === 'QA');
+  const communicatedToEmployer = communicationLog.some(
+    (entry) => entry.recipientType === 'Employer' && entryCountsAsNotified(entry)
+  );
+  const communicatedToLearner = communicationLog.some(
+    (entry) => entry.recipientType === 'Learner' && entryCountsAsNotified(entry)
+  );
+  const communicatedToQA = communicationLog.some(
+    (entry) => entry.recipientType === 'QA' && entryCountsAsNotified(entry)
+  );
 
   const coachName = String(raw.coach_name || 'Unknown Coach');
-  const learnerName = String(raw.learner_name || 'Unknown Learner');
+  const learnerName = normalizeLearnerDisplayName(raw.learner_name);
   const programmeName = String(raw.programme || 'Unknown Programme');
   const groupName = String(raw.group || 'Unknown Group');
+  const meeting = normalizeMeetingFields(raw);
 
   return {
     id: String(raw.id),
-    date: String(raw.date || raw.created_at || new Date().toISOString()),
+    date: meeting.date,
+    meetingDayDate: meeting.meetingDayDate,
+    meetingStartsAt: meeting.meetingStartsAt,
     coach: toEntity('coach', coachName) as any,
     learner: toEntity('learner', learnerName) as any,
     programme: toEntity('programme', programmeName) as any,
@@ -514,9 +630,15 @@ const mapDetailReview = (raw: RawReview): McrReview => {
   const communicationLog = mapCommunicationLog(asArray<RawCommunication>(raw.communications));
   const transcriptEvidence = mapTranscriptEvidence(qaItems);
 
-  const communicatedToEmployer = communicationLog.some((entry) => entry.recipientType === 'Employer');
-  const communicatedToLearner = communicationLog.some((entry) => entry.recipientType === 'Learner');
-  const communicatedToQA = communicationLog.some((entry) => entry.recipientType === 'QA');
+  const communicatedToEmployer = communicationLog.some(
+    (entry) => entry.recipientType === 'Employer' && entryCountsAsNotified(entry)
+  );
+  const communicatedToLearner = communicationLog.some(
+    (entry) => entry.recipientType === 'Learner' && entryCountsAsNotified(entry)
+  );
+  const communicatedToQA = communicationLog.some(
+    (entry) => entry.recipientType === 'QA' && entryCountsAsNotified(entry)
+  );
 
   const totalDurationMin = toNumber(raw.total_duration_min, 0);
 
@@ -541,12 +663,15 @@ const mapDetailReview = (raw: RawReview): McrReview => {
   };
 
   const score0to5 = clampScore(satisfactionQa?.rating_1_to_5 ?? raw.satisfaction_score);
+  const meeting = normalizeMeetingFields(raw);
 
   const mapped = {
     id: String(raw.id),
-    date: String(raw.date || raw.created_at || new Date().toISOString()),
+    date: meeting.date,
+    meetingDayDate: meeting.meetingDayDate,
+    meetingStartsAt: meeting.meetingStartsAt,
     coach: String(raw.coach_name || ''),
-    learner: String(raw.learner_name || ''),
+    learner: normalizeLearnerDisplayName(raw.learner_name, ''),
     programme: String(raw.programme || ''),
     group: String(raw.group || ''),
     meetingLink: String(raw.meeting_link || ''),
@@ -572,7 +697,7 @@ const mapDetailReview = (raw: RawReview): McrReview => {
     satisfaction: {
       score0to5,
       score: score0to5,
-      comments: String(satisfactionQa?.notes || satisfactionQa?.result || ''),
+      comments: normalizeDisplayComment(satisfactionQa?.notes) || normalizeDisplayComment(satisfactionQa?.result),
     },
     evidenceItems: [],
     transcriptEvidence,
@@ -767,7 +892,7 @@ const fetchRawReviews = async (): Promise<RawReview[]> => {
     console.warn('VITE_USE_MCR_MOCKS=true is set, but live backend mapping is being used.');
   }
   const response = await mcrApiClient.get<RawReview[]>('/api/mcr/reviews/');
-  return asArray<RawReview>(response.data);
+  return asArray<RawReview>(response.data).filter(reviewPassesDisplayCutoff);
 };
 
 export async function getDashboardMetrics(filters?: DashboardFilters): Promise<DashboardMetrics> {
@@ -824,16 +949,24 @@ export const getCommunicationLog = async (reviewId: string): Promise<Communicati
   return asArray<CommunicationLogEntry>((detail as any).communicationLog);
 };
 
+const recipientTypeToApi = (t: 'Employer' | 'Learner' | 'QA'): 'employer' | 'learner' | 'qa_system' => {
+  if (t === 'Employer') return 'employer';
+  if (t === 'Learner') return 'learner';
+  return 'qa_system';
+};
+
 export const addCommunicationLog = async (
-  _reviewId: string,
-  data: Omit<CommunicationLogEntry, 'id' | 'sentAt'>
-) => {
-  return {
-    id: `comm-${Date.now()}`,
-    ...data,
-    sentAt: new Date().toISOString(),
-    status: data.status || 'Sent',
-  };
+  reviewId: string,
+  data: { recipientType: 'Employer' | 'Learner' | 'QA'; notes: string; sentBy: string }
+): Promise<CommunicationLogEntry> => {
+  const response = await mcrApiClient.post<RawCommunication>(`/api/mcr/reviews/${reviewId}/communications/`, {
+    recipient_type: recipientTypeToApi(data.recipientType),
+    notes: data.notes,
+    sent_by: data.sentBy,
+  });
+  const [mapped] = mapCommunicationLog([response.data]);
+  if (!mapped) throw new Error('Invalid communication response');
+  return mapped;
 };
 
 export const getFilterOptions = async (): Promise<FilterOptions> => {
@@ -861,9 +994,6 @@ mcrApiClient.interceptors.response.use(
     return Promise.reject(error);
   }
 );
-
-
-
 
 
 
