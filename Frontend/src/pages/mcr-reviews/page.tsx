@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getReviews, getFilterOptions } from '../../utils/mcrApiClient';
 import { exportReviewsListToCsv } from '../../utils/reviewsExport';
@@ -12,6 +12,8 @@ export default function McrReviews() {
     pageSize: 10,
   });
   const [isExporting, setIsExporting] = useState(false);
+  const [showFiltersPanel, setShowFiltersPanel] = useState(false);
+  const filtersDropdownRef = useRef<HTMLDivElement | null>(null);
 
   const { data: filterOptions, isLoading: filtersLoading } = useQuery({
     queryKey: ['filterOptions'],
@@ -34,6 +36,34 @@ export default function McrReviews() {
   const handlePageChange = (page: number) => {
     setFilters(prev => ({ ...prev, page }));
   };
+
+  const activeFiltersCount = Object.keys(filters).filter(
+    (key) => key !== 'page' && key !== 'pageSize' && filters[key as keyof ReviewsFiltersType] !== undefined
+  ).length;
+
+  useEffect(() => {
+    if (!showFiltersPanel) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!filtersDropdownRef.current?.contains(event.target as Node)) {
+        setShowFiltersPanel(false);
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setShowFiltersPanel(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEscape);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [showFiltersPanel]);
 
   const handleExportAll = async () => {
     if (!reviewsData || reviewsData.total === 0 || isExporting) return;
@@ -63,6 +93,45 @@ export default function McrReviews() {
               </div>
             </div>
             <div className="flex items-center gap-4">
+              <div ref={filtersDropdownRef} className="relative">
+                <button
+                  onClick={() => setShowFiltersPanel((prev) => !prev)}
+                  className={`flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium transition-all cursor-pointer whitespace-nowrap ${
+                    showFiltersPanel
+                      ? 'bg-indigo-50 border-indigo-300 text-indigo-700 shadow-sm'
+                      : 'bg-white/85 border-white/80 text-gray-700 hover:bg-white'
+                  }`}
+                >
+                  <i className="ri-equalizer-line text-base"></i>
+                  Filters
+                  {activeFiltersCount > 0 && (
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold text-white">
+                      {activeFiltersCount}
+                    </span>
+                  )}
+                  <i className={`ri-arrow-${showFiltersPanel ? 'up' : 'down'}-s-line text-base`}></i>
+                </button>
+
+                {showFiltersPanel && (
+                  <div className="fixed inset-0 z-50 bg-[rgba(15,23,42,0.24)] backdrop-blur-[3px]">
+                    <div className="mx-auto flex h-full w-full max-w-[1380px] items-start justify-center px-6 pb-6 pt-24">
+                      <div className="w-full">
+                        <div className="max-h-[calc(100vh-7.5rem)] overflow-y-auto rounded-[28px]">
+                          <ReviewsFilters
+                            filters={filters}
+                            filterOptions={filterOptions}
+                            onFilterChange={handleFilterChange}
+                            onReset={handleResetFilters}
+                            isLoading={filtersLoading}
+                            variant="fullscreen"
+                            onClose={() => setShowFiltersPanel(false)}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
               <button
                 onClick={() => window.REACT_APP_NAVIGATE('/mcr/dashboard')}
                 className="rounded-xl border border-white/80 bg-white/85 px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-white cursor-pointer whitespace-nowrap"
@@ -76,15 +145,6 @@ export default function McrReviews() {
       </div>
 
       <div className="max-w-[1380px] mx-auto px-6 py-8">
-        {/* Filters Panel */}
-        <ReviewsFilters
-          filters={filters}
-          filterOptions={filterOptions}
-          onFilterChange={handleFilterChange}
-          onReset={handleResetFilters}
-          isLoading={filtersLoading}
-        />
-
         {/* Loading State */}
         {isLoading && (
           <div className="flex items-center justify-center py-24">
