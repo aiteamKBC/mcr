@@ -3,6 +3,8 @@ from collections import defaultdict
 from datetime import date, datetime
 from email.utils import formataddr
 from html import escape
+from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
 
 from django.conf import settings
 from django.core.mail import send_mail
@@ -384,6 +386,84 @@ class McrReviewViewSet(viewsets.ViewSet):
             return first or None
         return None
 
+    def _recipient_display_label(self, recipient_type: str) -> str:
+        return str(dict(CommunicationLogEntry.REC_CHOICES).get(recipient_type) or recipient_type)
+
+    def _build_review_public_url(self, review_id: int) -> str | None:
+        base_url = (getattr(settings, "MCR_PUBLIC_BASE_URL", "") or "").strip().rstrip("/")
+        if not base_url:
+            return None
+        return f"{base_url}/mcr/reviews/{review_id}"
+
+    def _dispatch_communication(
+        self,
+        review_id: int,
+        review: dict,
+        recipient: str,
+        to_email: str,
+        sent_by: str,
+        notes: str,
+    ) -> str:
+        recipient_label = self._recipient_display_label(recipient)
+        webhook_url = (getattr(settings, "MCR_N8N_COMMUNICATION_WEBHOOK", "") or "").strip()
+
+        payload = {
+            "event": "mcr.communication_requested",
+            "review_id": review_id,
+            "booking_id": review.get("booking_id"),
+            "recipient_type": recipient,
+            "recipient_label": recipient_label,
+            "recipient_email": to_email,
+            "sent_by": sent_by,
+            "notes": notes,
+            "coach_name": str(review.get("coach_name") or ""),
+            "learner_name": str(review.get("learner_name") or ""),
+            "programme": str(review.get("programme") or ""),
+            "group": str(review.get("group") or ""),
+            "review_date": review.get("date"),
+            "rag_status": review.get("rag_status"),
+            "qualitative_rating": review.get("qualitative_rating"),
+            "review_url": self._build_review_public_url(review_id),
+            "requested_at": datetime.utcnow().isoformat() + "Z",
+        }
+
+        if webhook_url:
+            request = Request(
+                webhook_url,
+                data=json.dumps(payload).encode("utf-8"),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+            try:
+                with urlopen(request, timeout=20) as response:
+                    status_code = getattr(response, "status", 200)
+                    if status_code >= 400:
+                        raise ValueError(f"Webhook returned HTTP {status_code}")
+            except HTTPError as exc:
+                raise ValueError(f"n8n webhook returned HTTP {exc.code}") from exc
+            except URLError as exc:
+                raise ValueError(f"n8n webhook could not be reached: {exc.reason}") from exc
+            except Exception as exc:  # noqa: BLE001
+                raise ValueError(f"n8n webhook failed: {exc!s}") from exc
+            return CommunicationLogEntry.STATUS_SENT
+
+        subject = f"MCR review #{review_id} - notification ({recipient_label})"
+        body = (
+            f"This message was logged from the MCR dashboard.\n\n"
+            f"Recipient: {recipient_label}\n"
+            f"Recipient email: {to_email}\n"
+            f"Sent by: {sent_by}\n\n"
+            f"{notes}\n"
+        )
+        send_mail(
+            subject=subject,
+            message=body,
+            from_email=formataddr((sent_by, settings.DEFAULT_FROM_EMAIL)),
+            recipient_list=[to_email],
+            fail_silently=False,
+        )
+        return CommunicationLogEntry.STATUS_SENT
+
     @extend_schema(responses=DashboardMcrReviewDetailSerializer(many=True))
     def list(self, request):
         mapped = [
@@ -460,6 +540,9 @@ class McrReviewViewSet(viewsets.ViewSet):
         notes = ser.validated_data.get("notes") or ""
         coach_name = str(review.get("coach_name") or "").strip()
         sent_by = str(ser.validated_data.get("sent_by") or "").strip() or coach_name or "Coach"
+        rid = self._to_int_or_default(pk, default=None)
+        if rid is None:
+            raise Http404
         sessions = self._fetch_sessions_by_booking_id(review.get("booking_id"))
         to_email = self._resolve_communication_email(sessions, recipient)
         if not to_email:
@@ -481,22 +564,19 @@ class McrReviewViewSet(viewsets.ViewSet):
             f"{notes}\n"
         )
         try:
-            send_mail(
-                subject=subject,
-                message=body,
-                from_email=formataddr((sent_by, settings.DEFAULT_FROM_EMAIL)),
-                recipient_list=[to_email],
-                fail_silently=False,
+            status = self._dispatch_communication(
+                review_id=rid,
+                review=review,
+                recipient=recipient,
+                to_email=to_email,
+                sent_by=sent_by,
+                notes=notes,
             )
-            status = CommunicationLogEntry.STATUS_SENT
         except Exception as exc:  # noqa: BLE001
             return Response(
-                {"detail": f"Email could not be sent: {exc!s}"},
+                {"detail": f"Communication could not be sent: {exc!s}"},
                 status=502,
             )
-        rid = self._to_int_or_default(pk, default=None)
-        if rid is None:
-            raise Http404
         obj = DashboardReviewCommunication.objects.create(
             review_id=rid,
             recipient_type=recipient,

@@ -32,7 +32,7 @@ export default function CommunicationModal({ reviewId, coachName, onClose }: Com
       await queryClient.invalidateQueries({ queryKey: ['review', reviewId] });
       await Swal.fire({
         icon: 'success',
-        title: 'Email sent',
+        title: 'Communication sent',
         text: `Review #${reviewId}: notification sent to ${recipientType}.`,
         confirmButtonColor: '#0d9488',
       });
