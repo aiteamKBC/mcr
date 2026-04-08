@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import DatePickerInput from '../../../components/DatePickerInput';
+import DropdownSelect from '../../../components/DropdownSelect';
 import { ReportDashboardFilters } from '../../../types/reports';
 
 interface DashboardFiltersBarProps {
@@ -32,6 +34,29 @@ export default function DashboardFiltersBar({
   };
 
   const activeCount = getActiveFilterCount();
+  const selectButtonClassName =
+    'w-full px-3 py-2 pr-11 text-left text-sm border border-indigo-200 bg-white rounded-md shadow-[0_10px_25px_rgba(99,102,241,0.08)] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent hover:border-indigo-300 transition-all cursor-pointer';
+  const statusOptions = [
+    { value: 'all', label: 'All Statuses' },
+    { value: 'completed', label: 'Completed' },
+    { value: 'failed', label: 'Failed' },
+    { value: 'pending', label: 'Pending' },
+    { value: 'processing', label: 'Processing' },
+  ];
+  const modelSelectOptions = [
+    { value: 'all', label: 'All Models' },
+    ...modelOptions.map((model) => ({ value: model, label: model })),
+  ];
+  const promptSelectOptions = [
+    { value: 'all', label: 'All Versions' },
+    ...promptVersionOptions.map((version) => ({ value: version, label: version })),
+  ];
+  const ragOptions = [
+    { value: 'all', label: 'All RAG' },
+    { value: 'Green', label: 'Green' },
+    { value: 'Amber', label: 'Amber' },
+    { value: 'Red', label: 'Red' },
+  ];
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 mb-6">
@@ -69,88 +94,65 @@ export default function DashboardFiltersBar({
           {/* Date From */}
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">Date From</label>
-            <input
-              type="date"
+            <DatePickerInput
               value={filters.dateFrom || ''}
-              onChange={(e) => handleFilterChange('dateFrom', e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              onChange={(nextValue) => handleFilterChange('dateFrom', nextValue)}
+              buttonClassName="w-full px-3 py-2 text-sm border border-indigo-200 bg-white rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent shadow-[0_10px_25px_rgba(99,102,241,0.08)]"
             />
           </div>
 
           {/* Date To */}
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">Date To</label>
-            <input
-              type="date"
+            <DatePickerInput
               value={filters.dateTo || ''}
-              onChange={(e) => handleFilterChange('dateTo', e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              onChange={(nextValue) => handleFilterChange('dateTo', nextValue)}
+              buttonClassName="w-full px-3 py-2 text-sm border border-indigo-200 bg-white rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent shadow-[0_10px_25px_rgba(99,102,241,0.08)]"
             />
           </div>
 
           {/* Status */}
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">Status</label>
-            <select
+            <DropdownSelect
               value={filters.status || 'all'}
-              onChange={(e) => handleFilterChange('status', e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent cursor-pointer"
-            >
-              <option value="all">All Statuses</option>
-              <option value="completed">Completed</option>
-              <option value="failed">Failed</option>
-              <option value="pending">Pending</option>
-              <option value="processing">Processing</option>
-            </select>
+              onChange={(nextValue) => handleFilterChange('status', nextValue)}
+              options={statusOptions}
+              buttonClassName={selectButtonClassName}
+            />
           </div>
 
           {/* Model */}
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">Model</label>
-            <select
+            <DropdownSelect
               value={filters.model || 'all'}
-              onChange={(e) => handleFilterChange('model', e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent cursor-pointer"
-            >
-              <option value="all">All Models</option>
-              {modelOptions.map((model) => (
-                <option key={model} value={model}>
-                  {model}
-                </option>
-              ))}
-            </select>
+              onChange={(nextValue) => handleFilterChange('model', nextValue)}
+              options={modelSelectOptions}
+              buttonClassName={selectButtonClassName}
+            />
           </div>
 
           {/* Prompt Version */}
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">Prompt Version</label>
-            <select
+            <DropdownSelect
               value={filters.prompt_version || 'all'}
-              onChange={(e) => handleFilterChange('prompt_version', e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent cursor-pointer"
-            >
-              <option value="all">All Versions</option>
-              {promptVersionOptions.map((version) => (
-                <option key={version} value={version}>
-                  {version}
-                </option>
-              ))}
-            </select>
+              onChange={(nextValue) => handleFilterChange('prompt_version', nextValue)}
+              options={promptSelectOptions}
+              buttonClassName={selectButtonClassName}
+            />
           </div>
 
           {/* RAG Status */}
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">RAG Status</label>
-            <select
+            <DropdownSelect
               value={filters.rag || 'all'}
-              onChange={(e) => handleFilterChange('rag', e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent cursor-pointer"
-            >
-              <option value="all">All RAG</option>
-              <option value="Green">Green</option>
-              <option value="Amber">Amber</option>
-              <option value="Red">Red</option>
-            </select>
+              onChange={(nextValue) => handleFilterChange('rag', nextValue)}
+              options={ragOptions}
+              buttonClassName={selectButtonClassName}
+            />
           </div>
 
           {/* Booking ID Search */}

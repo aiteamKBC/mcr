@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { createPortal } from 'react-dom';
 import { getReviews, getFilterOptions } from '../../utils/mcrApiClient';
 import { exportReviewsListToCsv } from '../../utils/reviewsExport';
 import ReviewsTable from './components/ReviewsTable';
@@ -13,7 +14,6 @@ export default function McrReviews() {
   });
   const [isExporting, setIsExporting] = useState(false);
   const [showFiltersPanel, setShowFiltersPanel] = useState(false);
-  const filtersDropdownRef = useRef<HTMLDivElement | null>(null);
 
   const { data: filterOptions, isLoading: filtersLoading } = useQuery({
     queryKey: ['filterOptions'],
@@ -44,23 +44,15 @@ export default function McrReviews() {
   useEffect(() => {
     if (!showFiltersPanel) return;
 
-    const handleClickOutside = (event: MouseEvent) => {
-      if (!filtersDropdownRef.current?.contains(event.target as Node)) {
-        setShowFiltersPanel(false);
-      }
-    };
-
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         setShowFiltersPanel(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
     document.addEventListener('keydown', handleEscape);
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleEscape);
     };
   }, [showFiltersPanel]);
@@ -93,7 +85,7 @@ export default function McrReviews() {
               </div>
             </div>
             <div className="flex items-center gap-4">
-              <div ref={filtersDropdownRef} className="relative">
+              <div className="relative">
                 <button
                   onClick={() => setShowFiltersPanel((prev) => !prev)}
                   className={`flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium transition-all cursor-pointer whitespace-nowrap ${
@@ -111,26 +103,6 @@ export default function McrReviews() {
                   )}
                   <i className={`ri-arrow-${showFiltersPanel ? 'up' : 'down'}-s-line text-base`}></i>
                 </button>
-
-                {showFiltersPanel && (
-                  <div className="fixed inset-0 z-50 bg-[rgba(15,23,42,0.24)] backdrop-blur-[3px]">
-                    <div className="mx-auto flex h-full w-full max-w-[1380px] items-start justify-center px-6 pb-6 pt-24">
-                      <div className="w-full">
-                        <div className="max-h-[calc(100vh-7.5rem)] overflow-y-auto rounded-[28px]">
-                          <ReviewsFilters
-                            filters={filters}
-                            filterOptions={filterOptions}
-                            onFilterChange={handleFilterChange}
-                            onReset={handleResetFilters}
-                            isLoading={filtersLoading}
-                            variant="fullscreen"
-                            onClose={() => setShowFiltersPanel(false)}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
               <button
                 onClick={() => window.REACT_APP_NAVIGATE('/mcr/dashboard')}
@@ -182,6 +154,30 @@ export default function McrReviews() {
           />
         )}
       </div>
+      {showFiltersPanel && createPortal(
+        <div
+          className="fixed inset-0 z-[90] overflow-y-auto bg-[rgba(15,23,42,0.24)] backdrop-blur-[3px]"
+          onClick={() => setShowFiltersPanel(false)}
+        >
+          <div className="mx-auto flex min-h-full w-full max-w-[1380px] items-start justify-center px-6 pb-6 pt-24">
+            <div
+              className="w-full"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <ReviewsFilters
+                filters={filters}
+                filterOptions={filterOptions}
+                onFilterChange={handleFilterChange}
+                onReset={handleResetFilters}
+                isLoading={filtersLoading}
+                variant="fullscreen"
+                onClose={() => setShowFiltersPanel(false)}
+              />
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }

@@ -1,5 +1,7 @@
 
 import { useState } from 'react';
+import DatePickerInput from '../../../components/DatePickerInput';
+import DropdownSelect from '../../../components/DropdownSelect';
 import type { ReportDashboardFilters, ReportStatus } from '../../../types/reports';
 
 interface ReportFiltersBarProps {
@@ -20,6 +22,23 @@ export default function ReportFiltersBar({
   const [open, setOpen] = useState(true);
 
   const activeCount = Object.values(filters).filter(Boolean).length;
+  const selectButtonClassName =
+    'w-full px-3 py-2 pr-11 text-left text-xs border border-indigo-200 bg-white rounded-lg shadow-[0_10px_24px_rgba(99,102,241,0.08)] focus:ring-2 focus:ring-indigo-400 focus:border-transparent outline-none transition-all hover:border-indigo-300 cursor-pointer';
+  const statusOptions = [
+    { value: '', label: 'All Statuses' },
+    { value: 'completed', label: 'Completed' },
+    { value: 'failed', label: 'Failed' },
+    { value: 'pending', label: 'Pending' },
+    { value: 'processing', label: 'Processing' },
+  ];
+  const modelSelectOptions = [
+    { value: '', label: 'All Models' },
+    ...models.map((model) => ({ value: model, label: model })),
+  ];
+  const promptSelectOptions = [
+    { value: '', label: 'All Versions' },
+    ...promptVersions.map((version) => ({ value: version, label: version })),
+  ];
 
   return (
     <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 mb-5">
@@ -56,69 +75,54 @@ export default function ReportFiltersBar({
           {/* Date From */}
           <div>
             <label className="block text-xs font-medium text-gray-500 mb-1">From</label>
-            <input
-              type="date"
+            <DatePickerInput
               value={filters.dateFrom || ''}
-              onChange={(e) => onChange({ dateFrom: e.target.value || undefined })}
-              className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-transparent outline-none transition-all"
+              onChange={(nextValue) => onChange({ dateFrom: nextValue || undefined })}
+              buttonClassName="w-full px-3 py-2 text-xs border border-indigo-200 bg-white rounded-lg shadow-[0_10px_24px_rgba(99,102,241,0.08)] focus:ring-2 focus:ring-indigo-400 focus:border-transparent outline-none transition-all"
             />
           </div>
 
           {/* Date To */}
           <div>
             <label className="block text-xs font-medium text-gray-500 mb-1">To</label>
-            <input
-              type="date"
+            <DatePickerInput
               value={filters.dateTo || ''}
-              onChange={(e) => onChange({ dateTo: e.target.value || undefined })}
-              className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-transparent outline-none transition-all"
+              onChange={(nextValue) => onChange({ dateTo: nextValue || undefined })}
+              buttonClassName="w-full px-3 py-2 text-xs border border-indigo-200 bg-white rounded-lg shadow-[0_10px_24px_rgba(99,102,241,0.08)] focus:ring-2 focus:ring-indigo-400 focus:border-transparent outline-none transition-all"
             />
           </div>
 
           {/* Status */}
           <div>
             <label className="block text-xs font-medium text-gray-500 mb-1">Status</label>
-            <select
+            <DropdownSelect
               value={filters.status || ''}
-              onChange={(e) => onChange({ status: (e.target.value as ReportStatus) || undefined })}
-              className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-transparent outline-none transition-all cursor-pointer"
-            >
-              <option value="">All Statuses</option>
-              <option value="completed">Completed</option>
-              <option value="failed">Failed</option>
-              <option value="pending">Pending</option>
-              <option value="processing">Processing</option>
-            </select>
+              onChange={(nextValue) => onChange({ status: (nextValue as ReportStatus) || undefined })}
+              options={statusOptions}
+              buttonClassName={selectButtonClassName}
+            />
           </div>
 
           {/* Model */}
           <div>
             <label className="block text-xs font-medium text-gray-500 mb-1">Model</label>
-            <select
+            <DropdownSelect
               value={filters.model || ''}
-              onChange={(e) => onChange({ model: e.target.value || undefined })}
-              className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-transparent outline-none transition-all cursor-pointer"
-            >
-              <option value="">All Models</option>
-              {models.map((m) => (
-                <option key={m} value={m}>{m}</option>
-              ))}
-            </select>
+              onChange={(nextValue) => onChange({ model: nextValue || undefined })}
+              options={modelSelectOptions}
+              buttonClassName={selectButtonClassName}
+            />
           </div>
 
           {/* Prompt Version */}
           <div>
             <label className="block text-xs font-medium text-gray-500 mb-1">Prompt Version</label>
-            <select
+            <DropdownSelect
               value={filters.prompt_version || ''}
-              onChange={(e) => onChange({ prompt_version: e.target.value || undefined })}
-              className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-transparent outline-none transition-all cursor-pointer"
-            >
-              <option value="">All Versions</option>
-              {promptVersions.map((v) => (
-                <option key={v} value={v}>{v}</option>
-              ))}
-            </select>
+              onChange={(nextValue) => onChange({ prompt_version: nextValue || undefined })}
+              options={promptSelectOptions}
+              buttonClassName={selectButtonClassName}
+            />
           </div>
         </div>
       )}

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import DropdownSelect from '../../../components/DropdownSelect';
 import { ReportRecord } from '../../../types/reports';
 import RagBadge from '../../../components/RagBadge';
 
@@ -63,6 +64,11 @@ export default function RecentReportsTable({ reports, isLoading }: RecentReports
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
   const paginatedReports = sortedReports.slice(startIndex, endIndex);
+  const pageSizeOptions = [
+    { value: '10', label: '10 per page' },
+    { value: '25', label: '25 per page' },
+    { value: '50', label: '50 per page' },
+  ];
 
   const getStatusBadge = (status: string) => {
     const styles: Record<string, string> = {
@@ -132,18 +138,16 @@ export default function RecentReportsTable({ reports, isLoading }: RecentReports
             <span className="text-sm text-gray-500">
               Showing {startIndex + 1}-{Math.min(endIndex, sortedReports.length)} of {sortedReports.length}
             </span>
-            <select
-              value={pageSize}
-              onChange={(e) => {
-                setPageSize(Number(e.target.value));
+            <DropdownSelect
+              value={pageSize.toString()}
+              onChange={(nextValue) => {
+                setPageSize(Number(nextValue));
                 setCurrentPage(1);
               }}
-              className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
-            >
-              <option value={10}>10 per page</option>
-              <option value={25}>25 per page</option>
-              <option value={50}>50 per page</option>
-            </select>
+              options={pageSizeOptions}
+              className="min-w-[9.5rem]"
+              buttonClassName="w-full rounded-lg border border-indigo-200 bg-white px-3 py-1.5 pr-11 text-left text-sm text-slate-800 shadow-[0_10px_24px_rgba(99,102,241,0.08)] transition-all outline-none hover:border-indigo-300 focus:border-transparent focus:ring-2 focus:ring-indigo-500"
+            />
           </div>
         </div>
 

@@ -1,6 +1,7 @@
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { getDashboardMetrics, getFilterOptions } from '../../utils/mcrApiClient';
 import type { DashboardFilters } from '../../types/mcr';
@@ -15,7 +16,6 @@ export default function MCRDashboardPage() {
   const navigate = useNavigate();
   const [filters, setFilters] = useState<DashboardFilters>({});
   const [showFiltersPanel, setShowFiltersPanel] = useState(false);
-  const filtersDropdownRef = useRef<HTMLDivElement | null>(null);
 
   const {
     data: dashboardData,
@@ -47,23 +47,15 @@ export default function MCRDashboardPage() {
   useEffect(() => {
     if (!showFiltersPanel) return;
 
-    const handleClickOutside = (event: MouseEvent) => {
-      if (!filtersDropdownRef.current?.contains(event.target as Node)) {
-        setShowFiltersPanel(false);
-      }
-    };
-
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         setShowFiltersPanel(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
     document.addEventListener('keydown', handleEscape);
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleEscape);
     };
   }, [showFiltersPanel]);
@@ -104,7 +96,7 @@ export default function MCRDashboardPage() {
             {/* Right actions */}
             <div className="flex items-center gap-2">
               <span className="hidden xl:block text-xs text-slate-400 mr-2">{dateLabel}</span>
-              <div ref={filtersDropdownRef} className="relative">
+              <div className="relative">
                 <button
                   onClick={handleFiltersToggle}
                   className={`flex items-center gap-2 px-3.5 py-2 rounded-xl border text-sm font-medium transition-all cursor-pointer whitespace-nowrap ${
@@ -122,27 +114,6 @@ export default function MCRDashboardPage() {
                   )}
                   <i className={`ri-arrow-${showFiltersPanel ? 'up' : 'down'}-s-line text-base`}></i>
                 </button>
-
-                {showFiltersPanel && (
-                  <div className="fixed inset-0 z-50 bg-[rgba(15,23,42,0.24)] backdrop-blur-[3px]">
-                    <div className="mx-auto flex h-full w-full max-w-[1800px] items-start justify-center px-6 pb-6 pt-24">
-                      <div className="w-full max-w-[1680px]">
-                        <div className="max-h-[calc(100vh-7.5rem)] overflow-y-auto rounded-[28px]">
-                      <FiltersPanel
-                        filters={filters}
-                        onFiltersChange={setFilters}
-                        onClose={() => setShowFiltersPanel(false)}
-                        filterOptions={filterOptions}
-                        activeFiltersCount={activeFiltersCount}
-                        onClearFilters={handleClearFilters}
-                        variant="fullscreen"
-                        className="mb-0"
-                      />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
               <button
                 onClick={() => refetch()}
@@ -221,6 +192,31 @@ export default function MCRDashboardPage() {
           isLoading={isLoading}
         />
       </main>
+      {showFiltersPanel && createPortal(
+        <div
+          className="fixed inset-0 z-[90] overflow-y-auto bg-[rgba(15,23,42,0.24)] backdrop-blur-[3px]"
+          onClick={() => setShowFiltersPanel(false)}
+        >
+          <div className="mx-auto flex min-h-full w-full max-w-[1800px] items-start justify-center px-6 pb-6 pt-24">
+            <div
+              className="w-full max-w-[1680px]"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <FiltersPanel
+                filters={filters}
+                onFiltersChange={setFilters}
+                onClose={() => setShowFiltersPanel(false)}
+                filterOptions={filterOptions}
+                activeFiltersCount={activeFiltersCount}
+                onClearFilters={handleClearFilters}
+                variant="fullscreen"
+                className="mb-0"
+              />
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }

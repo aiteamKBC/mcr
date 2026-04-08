@@ -1,4 +1,5 @@
 import { lazy } from 'react';
+import { Navigate } from 'react-router-dom';
 import type { RouteObject } from 'react-router-dom';
 
 const McrDashboard = lazy(() => import('../pages/mcr-dashboard/page'));
@@ -10,7 +11,11 @@ const NotFound = lazy(() => import('../pages/NotFound'));
 const routes: RouteObject[] = [
   {
     path: '/',
-    element: <McrDashboard />,
+    element: <Navigate to="/mcr/dashboard" replace />,
+  },
+  {
+    path: '/mcr',
+    element: <Navigate to="/mcr/dashboard" replace />,
   },
   {
     path: '/mcr/dashboard',

@@ -1,3 +1,5 @@
+import DatePickerInput from '../../../components/DatePickerInput';
+import DropdownSelect from '../../../components/DropdownSelect';
 import type { DashboardFilters, FilterOptions } from '../../../types/mcr';
 
 interface FiltersPanelProps {
@@ -41,6 +43,9 @@ export default function FiltersPanel({
   const inputClassName = isFullscreen
     ? 'w-full px-4 py-3 border border-indigo-200 bg-white/85 rounded-xl text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition-all'
     : 'w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent';
+  const selectButtonClassName = isFullscreen
+    ? `${inputClassName} cursor-pointer pr-12 text-left hover:border-indigo-300 hover:bg-white shadow-[0_10px_30px_rgba(99,102,241,0.08)]`
+    : `${inputClassName} cursor-pointer pr-11 text-left hover:border-indigo-300 hover:bg-white shadow-[0_10px_25px_rgba(99,102,241,0.08)]`;
   const labelClassName = isFullscreen
     ? 'block text-sm font-semibold text-slate-700 mb-2.5'
     : 'block text-sm font-semibold text-slate-700 mb-2';
@@ -50,6 +55,31 @@ export default function FiltersPanel({
   const clearButtonClassName = isFullscreen
     ? 'px-4 py-2 text-sm font-medium text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition-colors cursor-pointer whitespace-nowrap'
     : 'px-3 py-1.5 text-sm font-medium text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer whitespace-nowrap';
+  const coachOptions = filterOptions?.coaches.map((coach) => ({
+    value: coach.id,
+    label: coach.name,
+  })) ?? [];
+  const programmeOptions = filterOptions?.programmes.map((programme) => ({
+    value: programme.id,
+    label: programme.name,
+  })) ?? [];
+  const groupOptions = filterOptions?.groups.map((group) => ({
+    value: group.id,
+    label: group.name,
+  })) ?? [];
+  const ragOptions = [
+    { value: '', label: 'All Statuses' },
+    { value: 'Green', label: 'Green' },
+    { value: 'Amber', label: 'Amber' },
+    { value: 'Red', label: 'Red' },
+  ];
+  const qualitativeRatingOptions = [
+    { value: '', label: 'All Ratings' },
+    { value: 'Outstanding', label: 'Outstanding' },
+    { value: 'Good', label: 'Good' },
+    { value: 'Requires Improvement', label: 'Requires Improvement' },
+    { value: 'Inadequate', label: 'Inadequate' },
+  ];
 
   return (
     <div className={`${panelClassName} ${className}`}>
@@ -93,105 +123,76 @@ export default function FiltersPanel({
         {/* Date From */}
         <div>
           <label className={labelClassName}>Date From</label>
-          <input
-            type="date"
+          <DatePickerInput
             value={filters.dateFrom || ''}
-            onChange={(e) => handleFilterChange('dateFrom', e.target.value)}
-            className={inputClassName}
+            onChange={(nextValue) => handleFilterChange('dateFrom', nextValue)}
+            buttonClassName={inputClassName}
           />
         </div>
 
         {/* Date To */}
         <div>
           <label className={labelClassName}>Date To</label>
-          <input
-            type="date"
+          <DatePickerInput
             value={filters.dateTo || ''}
-            onChange={(e) => handleFilterChange('dateTo', e.target.value)}
-            className={inputClassName}
+            onChange={(nextValue) => handleFilterChange('dateTo', nextValue)}
+            buttonClassName={inputClassName}
           />
         </div>
 
         {/* Coach */}
         <div>
           <label className={labelClassName}>Coach</label>
-          <select
+          <DropdownSelect
             value={filters.coachId || ''}
-            onChange={(e) => handleFilterChange('coachId', e.target.value)}
-            className={`${inputClassName} cursor-pointer`}
-          >
-            <option value="">All Coaches</option>
-            {filterOptions?.coaches.map((coach) => (
-              <option key={coach.id} value={coach.id}>
-                {coach.name}
-              </option>
-            ))}
-          </select>
+            onChange={(nextValue) => handleFilterChange('coachId', nextValue)}
+            options={[{ value: '', label: 'All Coaches' }, ...coachOptions]}
+            buttonClassName={selectButtonClassName}
+          />
         </div>
 
         {/* Programme */}
         <div>
           <label className={labelClassName}>Programme</label>
-          <select
+          <DropdownSelect
             value={filters.programmeId || ''}
-            onChange={(e) => handleFilterChange('programmeId', e.target.value)}
-            className={`${inputClassName} cursor-pointer`}
-          >
-            <option value="">All Programmes</option>
-            {filterOptions?.programmes.map((programme) => (
-              <option key={programme.id} value={programme.id}>
-                {programme.name}
-              </option>
-            ))}
-          </select>
+            onChange={(nextValue) => handleFilterChange('programmeId', nextValue)}
+            options={[{ value: '', label: 'All Programmes' }, ...programmeOptions]}
+            buttonClassName={selectButtonClassName}
+          />
         </div>
 
         {/* Group */}
         <div>
           <label className={labelClassName}>Group</label>
-          <select
+          <DropdownSelect
             value={filters.groupId || ''}
-            onChange={(e) => handleFilterChange('groupId', e.target.value)}
-            className={`${inputClassName} cursor-pointer`}
-          >
-            <option value="">All Groups</option>
-            {filterOptions?.groups.map((group) => (
-              <option key={group.id} value={group.id}>
-                {group.name}
-              </option>
-            ))}
-          </select>
+            onChange={(nextValue) => handleFilterChange('groupId', nextValue)}
+            options={[{ value: '', label: 'All Groups' }, ...groupOptions]}
+            buttonClassName={selectButtonClassName}
+          />
         </div>
 
         {/* RAG Status */}
         <div>
           <label className={labelClassName}>RAG Status</label>
-          <select
+          <DropdownSelect
             value={filters.ragStatus || ''}
-            onChange={(e) => handleFilterChange('ragStatus', e.target.value as any)}
-            className={`${inputClassName} cursor-pointer`}
-          >
-            <option value="">All Statuses</option>
-            <option value="Green">Green</option>
-            <option value="Amber">Amber</option>
-            <option value="Red">Red</option>
-          </select>
+            onChange={(nextValue) => handleFilterChange('ragStatus', nextValue as any)}
+            options={ragOptions}
+            buttonClassName={selectButtonClassName}
+          />
         </div>
 
         {/* Qualitative Rating */}
         <div className={isFullscreen ? 'xl:col-span-3' : ''}>
           <label className={labelClassName}>Qualitative Rating</label>
-          <select
+          <DropdownSelect
             value={filters.qualitativeRating || ''}
-            onChange={(e) => handleFilterChange('qualitativeRating', e.target.value)}
-            className={`${inputClassName} cursor-pointer`}
-          >
-            <option value="">All Ratings</option>
-            <option value="Outstanding">Outstanding</option>
-            <option value="Good">Good</option>
-            <option value="Requires Improvement">Requires Improvement</option>
-            <option value="Inadequate">Inadequate</option>
-          </select>
+            onChange={(nextValue) => handleFilterChange('qualitativeRating', nextValue)}
+            options={qualitativeRatingOptions}
+            buttonClassName={selectButtonClassName}
+          />
         </div>
       </div>
 

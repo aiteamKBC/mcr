@@ -1,4 +1,6 @@
+import DatePickerInput from '../../../components/DatePickerInput';
 import { useEffect, useRef, useState } from 'react';
+import DropdownSelect from '../../../components/DropdownSelect';
 import type { ReviewsFilters, FilterOptions } from '../../../types/mcr';
 
 interface ReviewsFiltersProps {
@@ -47,7 +49,37 @@ export default function ReviewsFilters({
 
   const inputClassName =
     'w-full px-4 py-3 border border-indigo-200 bg-white/85 rounded-xl text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition-all';
-  const selectClassName = `${inputClassName} cursor-pointer`;
+  const selectButtonClassName = `${inputClassName} cursor-pointer pr-12 text-left hover:border-indigo-300 hover:bg-white shadow-[0_10px_30px_rgba(99,102,241,0.08)]`;
+  const coachOptions = filterOptions?.coaches.map((coach) => ({
+    value: coach.id,
+    label: coach.name,
+  })) ?? [];
+  const programmeOptions = filterOptions?.programmes.map((programme) => ({
+    value: programme.id,
+    label: programme.name,
+  })) ?? [];
+  const groupOptions = filterOptions?.groups.map((group) => ({
+    value: group.id,
+    label: group.name,
+  })) ?? [];
+  const ragOptions = [
+    { value: '', label: 'All Statuses' },
+    { value: 'Green', label: 'Green' },
+    { value: 'Amber', label: 'Amber' },
+    { value: 'Red', label: 'Red' },
+  ];
+  const qualitativeRatingOptions = [
+    { value: '', label: 'All Ratings' },
+    { value: 'Outstanding', label: 'Outstanding' },
+    { value: 'Good', label: 'Good' },
+    { value: 'Requires Improvement', label: 'Requires Improvement' },
+    { value: 'Inadequate', label: 'Inadequate' },
+  ];
+  const safeguardingOptions = [
+    { value: '', label: 'All' },
+    { value: 'true', label: 'Flagged Only' },
+    { value: 'false', label: 'Not Flagged' },
+  ];
 
   const renderFiltersContent = () => (
     <>
@@ -60,11 +92,10 @@ export default function ReviewsFilters({
           <label className="mb-2.5 block text-sm font-semibold text-slate-700">
             Date From
           </label>
-          <input
-            type="date"
+          <DatePickerInput
             value={filters.dateFrom || ''}
-            onChange={(e) => onFilterChange({ dateFrom: e.target.value })}
-            className={inputClassName}
+            onChange={(nextValue) => onFilterChange({ dateFrom: nextValue })}
+            buttonClassName={inputClassName}
             disabled={isLoading}
           />
         </div>
@@ -73,11 +104,10 @@ export default function ReviewsFilters({
           <label className="mb-2.5 block text-sm font-semibold text-slate-700">
             Date To
           </label>
-          <input
-            type="date"
+          <DatePickerInput
             value={filters.dateTo || ''}
-            onChange={(e) => onFilterChange({ dateTo: e.target.value })}
-            className={inputClassName}
+            onChange={(nextValue) => onFilterChange({ dateTo: nextValue })}
+            buttonClassName={inputClassName}
             disabled={isLoading}
           />
         </div>
@@ -86,110 +116,80 @@ export default function ReviewsFilters({
           <label className="mb-2.5 block text-sm font-semibold text-slate-700">
             Coach
           </label>
-          <select
+          <DropdownSelect
             value={filters.coachId || ''}
-            onChange={(e) => onFilterChange({ coachId: e.target.value || undefined })}
-            className={selectClassName}
+            onChange={(nextValue) => onFilterChange({ coachId: nextValue || undefined })}
+            options={[{ value: '', label: 'All Coaches' }, ...coachOptions]}
+            buttonClassName={selectButtonClassName}
             disabled={isLoading}
-          >
-            <option value="">All Coaches</option>
-            {filterOptions?.coaches.map((coach) => (
-              <option key={coach.id} value={coach.id}>
-                {coach.name}
-              </option>
-            ))}
-          </select>
+          />
         </div>
 
         <div>
           <label className="mb-2.5 block text-sm font-semibold text-slate-700">
             Programme
           </label>
-          <select
+          <DropdownSelect
             value={filters.programmeId || ''}
-            onChange={(e) => onFilterChange({ programmeId: e.target.value || undefined })}
-            className={selectClassName}
+            onChange={(nextValue) => onFilterChange({ programmeId: nextValue || undefined })}
+            options={[{ value: '', label: 'All Programmes' }, ...programmeOptions]}
+            buttonClassName={selectButtonClassName}
             disabled={isLoading}
-          >
-            <option value="">All Programmes</option>
-            {filterOptions?.programmes.map((programme) => (
-              <option key={programme.id} value={programme.id}>
-                {programme.name}
-              </option>
-            ))}
-          </select>
+          />
         </div>
 
         <div>
           <label className="mb-2.5 block text-sm font-semibold text-slate-700">
             Group
           </label>
-          <select
+          <DropdownSelect
             value={filters.groupId || ''}
-            onChange={(e) => onFilterChange({ groupId: e.target.value || undefined })}
-            className={selectClassName}
+            onChange={(nextValue) => onFilterChange({ groupId: nextValue || undefined })}
+            options={[{ value: '', label: 'All Groups' }, ...groupOptions]}
+            buttonClassName={selectButtonClassName}
             disabled={isLoading}
-          >
-            <option value="">All Groups</option>
-            {filterOptions?.groups.map((group) => (
-              <option key={group.id} value={group.id}>
-                {group.name}
-              </option>
-            ))}
-          </select>
+          />
         </div>
 
         <div>
           <label className="mb-2.5 block text-sm font-semibold text-slate-700">
             RAG Status
           </label>
-          <select
+          <DropdownSelect
             value={filters.ragStatus || ''}
-            onChange={(e) => onFilterChange({ ragStatus: e.target.value as any || undefined })}
-            className={selectClassName}
+            onChange={(nextValue) => onFilterChange({ ragStatus: nextValue as any || undefined })}
+            options={ragOptions}
+            buttonClassName={selectButtonClassName}
             disabled={isLoading}
-          >
-            <option value="">All Statuses</option>
-            <option value="Green">Green</option>
-            <option value="Amber">Amber</option>
-            <option value="Red">Red</option>
-          </select>
+          />
         </div>
 
         <div>
           <label className="mb-2.5 block text-sm font-semibold text-slate-700">
             Qualitative Rating
           </label>
-          <select
+          <DropdownSelect
             value={filters.qualitativeRating || ''}
-            onChange={(e) => onFilterChange({ qualitativeRating: e.target.value as any || undefined })}
-            className={selectClassName}
+            onChange={(nextValue) => onFilterChange({ qualitativeRating: nextValue as any || undefined })}
+            options={qualitativeRatingOptions}
+            buttonClassName={selectButtonClassName}
             disabled={isLoading}
-          >
-            <option value="">All Ratings</option>
-            <option value="Outstanding">Outstanding</option>
-            <option value="Good">Good</option>
-            <option value="Requires Improvement">Requires Improvement</option>
-            <option value="Inadequate">Inadequate</option>
-          </select>
+          />
         </div>
 
         <div>
           <label className="mb-2.5 block text-sm font-semibold text-slate-700">
             Safeguarding
           </label>
-          <select
+          <DropdownSelect
             value={filters.safeguardingFlagged === undefined ? '' : filters.safeguardingFlagged.toString()}
-            onChange={(e) => onFilterChange({
-              safeguardingFlagged: e.target.value === '' ? undefined : e.target.value === 'true',
+            onChange={(nextValue) => onFilterChange({
+              safeguardingFlagged: nextValue === '' ? undefined : nextValue === 'true',
             })}
-            className={selectClassName}
+            options={safeguardingOptions}
+            buttonClassName={selectButtonClassName}
             disabled={isLoading}
-          >
-            <option value="">All</option>
-            <option value="true">Flagged Only</option>
-            <option value="false">Not Flagged</option>
-          </select>
+          />
         </div>
       </div>
 
