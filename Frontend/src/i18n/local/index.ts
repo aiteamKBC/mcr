@@ -1,3 +1,8 @@
+// MCR file header: Frontend\src\i18n\local\index.ts
+// This file is part of the MCR application source.
+// Purpose: Source file for the MCR application.
+
+
 const modules = import.meta.glob('./*/*.ts', { eager: true });
 
 const messages: Record<string, { translation: Record<string, string> }> = {};

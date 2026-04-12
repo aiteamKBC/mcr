@@ -1,3 +1,8 @@
+// MCR file header: Frontend\src\pages\NotFound.tsx
+// This file is part of the MCR application source.
+// Purpose: Source file for the MCR application.
+
+
 import { useLocation } from "react-router-dom";
 
 export default function NotFound() {

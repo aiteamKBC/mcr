@@ -1,14 +1,21 @@
+// MCR file header: Frontend\src\pages\mcr-dashboard\components\DailyVolumeBarChart.tsx
+// This file is part of the MCR application source.
+// Purpose: Source file for the MCR application.
+
+
+import { Bar, BarChart, CartesianGrid, Cell, LabelList, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import AnimatedNumber from './AnimatedNumber';
+import useReplayOnView from './useReplayOnView';
 
 interface DailyVolumeBarChartProps {
   data?: Array<{ period: string; count: number }>;
   isLoading?: boolean;
 }
 
-const CHART_H = 140;
-const CHART_W = 100; // viewBox units (percentage-based)
-const PADDING = { top: 16, right: 4, bottom: 28, left: 28 };
-
 export default function DailyVolumeBarChart({ data, isLoading }: DailyVolumeBarChartProps) {
+  const { ref, replayKey } = useReplayOnView({ threshold: 0.3 });
+  const isActive = replayKey > 0;
+
   if (isLoading) {
     return (
       <div className="bg-white rounded-2xl border border-slate-100 p-6 animate-pulse h-full">
@@ -34,23 +41,30 @@ export default function DailyVolumeBarChart({ data, isLoading }: DailyVolumeBarC
   const momChange = lastMonth - prevMonth;
   const momPct = prevMonth > 0 ? (momChange / prevMonth) * 100 : 0;
   const trending = momChange >= 0;
-
-  // SVG chart dimensions
-  const svgW = 500;
-  const svgH = CHART_H + PADDING.top + PADDING.bottom;
-  const plotW = svgW - PADDING.left - PADDING.right;
-  const plotH = CHART_H;
-
-  const gridLines = 4;
   const yMax = Math.ceil(maxCount / 5) * 5 || 10;
 
-  const barCount = data.length;
-  const barGroupW = plotW / barCount;
-  const barW = Math.min(barGroupW * 0.55, 36);
+  const chartData = data.map((item, index) => {
+    const isPeak = item.count === maxCount;
+    const isLatest = index === data.length - 1;
+
+    return {
+      ...item,
+      fill: isPeak ? 'url(#volume-peak)' : isLatest ? 'url(#volume-latest)' : 'url(#volume-default)',
+    };
+  });
+
+  const animatedChartData = isActive
+    ? chartData
+    : chartData.map((item) => ({
+        ...item,
+        count: 0,
+      }));
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-100 p-6 flex flex-col h-full hover:shadow-lg transition-shadow duration-300">
-      {/* Header */}
+    <div
+      ref={ref}
+      className="bg-white rounded-2xl border border-slate-100 p-6 flex flex-col h-full hover:shadow-[0_20px_45px_rgba(15,23,42,0.08)] transition-all duration-700"
+    >
       <div className="flex items-start justify-between mb-5">
         <div>
           <h3 className="text-sm font-bold text-slate-800 tracking-tight">MCR Volume Over Time</h3>
@@ -60,128 +74,94 @@ export default function DailyVolumeBarChart({ data, isLoading }: DailyVolumeBarC
           trending ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-rose-50 text-rose-500 border border-rose-100'
         }`}>
           <i className={`${trending ? 'ri-arrow-up-line' : 'ri-arrow-down-line'} text-xs`}></i>
-          {Math.abs(momPct).toFixed(1)}%
+          <AnimatedNumber value={Math.abs(momPct)} decimals={1} durationMs={900} replayKey={replayKey} isActive={isActive} />
+          %
         </div>
       </div>
 
-      {/* SVG Chart */}
       <div className="flex-1 w-full">
-        <svg
-          viewBox={`0 0 ${svgW} ${svgH}`}
-          className="w-full"
-          style={{ height: `${svgH}px` }}
-          preserveAspectRatio="xMidYMid meet"
-        >
-          {/* Grid lines */}
-          {[...Array(gridLines + 1)].map((_, i) => {
-            const y = PADDING.top + plotH - (i / gridLines) * plotH;
-            const val = Math.round((i / gridLines) * yMax);
-            return (
-              <g key={i}>
-                <line
-                  x1={PADDING.left}
-                  y1={y}
-                  x2={svgW - PADDING.right}
-                  y2={y}
-                  stroke={i === 0 ? '#cbd5e1' : '#f1f5f9'}
-                  strokeWidth={i === 0 ? 1.5 : 1}
-                />
-                <text
-                  x={PADDING.left - 6}
-                  y={y + 4}
-                  textAnchor="end"
-                  fontSize="11"
-                  fill="#94a3b8"
-                  fontFamily="Inter, sans-serif"
-                >
-                  {val}
-                </text>
-              </g>
-            );
-          })}
-
-          {/* Bars */}
-          {data.map((item, index) => {
-            const barH = yMax > 0 ? (item.count / yMax) * plotH : 0;
-            const x = PADDING.left + index * barGroupW + (barGroupW - barW) / 2;
-            const y = PADDING.top + plotH - barH;
-            const isPeak = item.count === maxCount;
-            const isLast = index === data.length - 1;
-
-            const fillStart = isPeak ? '#10b981' : isLast ? '#6366f1' : '#94a3b8';
-            const fillEnd   = isPeak ? '#34d399' : isLast ? '#a78bfa' : '#cbd5e1';
-            const gradId    = `grad-${index}`;
-
-            return (
-              <g key={index} className="group">
-                <defs>
-                  <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={fillEnd} />
-                    <stop offset="100%" stopColor={fillStart} />
-                  </linearGradient>
-                </defs>
-
-                {/* Bar */}
-                <rect
-                  x={x}
-                  y={y}
-                  width={barW}
-                  height={Math.max(barH, 2)}
-                  rx={5}
-                  ry={5}
-                  fill={`url(#${gradId})`}
-                  opacity={0.92}
-                />
-
-                {/* Value label above bar */}
-                {item.count > 0 && (
-                  <text
-                    x={x + barW / 2}
-                    y={y - 5}
-                    textAnchor="middle"
-                    fontSize="11"
-                    fontWeight="700"
-                    fill={isPeak ? '#059669' : isLast ? '#4f46e5' : '#64748b'}
-                    fontFamily="Inter, sans-serif"
-                  >
-                    {item.count}
-                  </text>
-                )}
-
-                {/* X-axis label */}
-                <text
-                  x={x + barW / 2}
-                  y={PADDING.top + plotH + 18}
-                  textAnchor="middle"
-                  fontSize="11"
-                  fill="#94a3b8"
-                  fontFamily="Inter, sans-serif"
-                >
-                  {item.period}
-                </text>
-              </g>
-            );
-          })}
-        </svg>
+        <ResponsiveContainer width="100%" height={196}>
+          <BarChart data={animatedChartData} margin={{ top: 16, right: 10, left: -12, bottom: 4 }} barCategoryGap="30%">
+            <defs>
+              <linearGradient id="volume-default" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#cbd5e1" />
+                <stop offset="100%" stopColor="#94a3b8" />
+              </linearGradient>
+              <linearGradient id="volume-peak" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#4ade80" />
+                <stop offset="100%" stopColor="#10b981" />
+              </linearGradient>
+              <linearGradient id="volume-latest" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#a78bfa" />
+                <stop offset="100%" stopColor="#6366f1" />
+              </linearGradient>
+            </defs>
+            <CartesianGrid vertical={false} stroke="#e2e8f0" strokeDasharray="4 6" />
+            <XAxis
+              dataKey="period"
+              axisLine={false}
+              tickLine={false}
+              tick={{ fontSize: 11, fill: '#94a3b8' }}
+            />
+            <YAxis
+              axisLine={false}
+              tickLine={false}
+              allowDecimals={false}
+              domain={[0, yMax]}
+              tickCount={5}
+              tick={{ fontSize: 11, fill: '#94a3b8' }}
+            />
+            <Tooltip
+              cursor={{ fill: 'rgba(99,102,241,0.06)' }}
+              contentStyle={{
+                border: '1px solid rgba(226,232,240,0.9)',
+                borderRadius: '14px',
+                boxShadow: '0 16px 40px rgba(15,23,42,0.12)',
+                backgroundColor: 'rgba(255,255,255,0.98)',
+              }}
+              formatter={(value: number) => [`${value} reviews`, 'Volume']}
+              labelFormatter={(label) => `${label}`}
+            />
+            <Bar
+              key={`volume-bar-${replayKey}`}
+              dataKey="count"
+              radius={[8, 8, 4, 4]}
+              maxBarSize={44}
+              isAnimationActive={isActive}
+              animationBegin={150}
+              animationDuration={1050}
+              animationEasing="ease-out"
+            >
+              {animatedChartData.map((entry) => (
+                <Cell key={entry.period} fill={entry.fill} />
+              ))}
+              <LabelList
+                dataKey="count"
+                position="top"
+                offset={8}
+                className="text-[11px] font-extrabold fill-slate-500"
+                formatter={(value: number) => (value > 0 ? value : '')}
+              />
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
       </div>
 
-      {/* Summary Stats */}
       <div className="grid grid-cols-3 gap-3 mt-4">
         <div className="bg-emerald-50/70 rounded-xl p-3 text-center border border-emerald-100">
-          <p className="text-lg font-extrabold text-emerald-800">{totalCount}</p>
+          <AnimatedNumber value={totalCount} replayKey={replayKey} isActive={isActive} className="text-lg font-extrabold text-emerald-800" />
           <p className="text-xs text-slate-400 mt-0.5 font-medium">Total</p>
         </div>
         <div className="bg-emerald-50 rounded-xl p-3 text-center border border-emerald-100">
-          <p className="text-lg font-extrabold text-emerald-700">{peakCount}</p>
+          <AnimatedNumber value={peakCount} replayKey={replayKey} isActive={isActive} className="text-lg font-extrabold text-emerald-700" />
           <p className="text-xs text-slate-400 mt-0.5 font-medium">Peak</p>
         </div>
         <div className="bg-indigo-50/70 rounded-xl p-3 text-center border border-indigo-100">
-          <p className="text-lg font-extrabold text-indigo-700">{avgCount.toFixed(1)}</p>
+          <AnimatedNumber value={avgCount} decimals={1} replayKey={replayKey} isActive={isActive} className="text-lg font-extrabold text-indigo-700" />
           <p className="text-xs text-slate-400 mt-0.5 font-medium">Avg / mo</p>
         </div>
       </div>
 
-      {/* Footer */}
       <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
         <div className="flex items-center gap-3 text-xs text-slate-400">
           <span className="flex items-center gap-1.5">
@@ -195,10 +175,10 @@ export default function DailyVolumeBarChart({ data, isLoading }: DailyVolumeBarC
         </div>
         <div className={`flex items-center gap-1 text-xs font-semibold ${trending ? 'text-emerald-600' : 'text-rose-500'}`}>
           <i className={trending ? 'ri-arrow-up-line' : 'ri-arrow-down-line'}></i>
-          {Math.abs(momChange)} vs prev month
+          <AnimatedNumber value={Math.abs(momChange)} replayKey={replayKey} durationMs={900} isActive={isActive} />
+          <span>vs prev month</span>
         </div>
       </div>
     </div>
   );
 }
-

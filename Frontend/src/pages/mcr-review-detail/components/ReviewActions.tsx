@@ -1,14 +1,13 @@
-import { useState } from 'react';
-import CommunicationModal from './CommunicationModal';
+// MCR file header: Frontend\src\pages\mcr-review-detail\components\ReviewActions.tsx
+// This file is part of the MCR application source.
+// Purpose: Source file for the MCR application.
+
 
 interface ReviewActionsProps {
   reviewId: string;
-  coachName: string;
 }
 
-export default function ReviewActions({ reviewId, coachName }: ReviewActionsProps) {
-  const [showCommunicationModal, setShowCommunicationModal] = useState(false);
-
+export default function ReviewActions({ reviewId }: ReviewActionsProps) {
   const handlePrint = () => {
     window.REACT_APP_NAVIGATE(`/mcr/reviews/${reviewId}/print`);
   };
@@ -26,24 +25,9 @@ export default function ReviewActions({ reviewId, coachName }: ReviewActionsProp
               <i className="ri-printer-line text-sm"></i>
               Print Report
             </button>
-            <button
-              onClick={() => setShowCommunicationModal(true)}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-white bg-indigo-500 rounded-lg hover:bg-indigo-600 transition-colors cursor-pointer whitespace-nowrap shadow-sm"
-            >
-              <i className="ri-mail-send-line text-sm"></i>
-              Mark Communicated
-            </button>
           </div>
         </div>
       </div>
-
-      {showCommunicationModal && (
-        <CommunicationModal
-          reviewId={reviewId}
-          coachName={coachName}
-          onClose={() => setShowCommunicationModal(false)}
-        />
-      )}
     </>
   );
 }

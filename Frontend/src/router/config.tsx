@@ -1,3 +1,8 @@
+// MCR file header: Frontend\src\router\config.tsx
+// This file is part of the MCR application source.
+// Purpose: Source file for the MCR application.
+
+
 import { lazy } from 'react';
 import { Navigate } from 'react-router-dom';
 import type { RouteObject } from 'react-router-dom';

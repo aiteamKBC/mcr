@@ -1,3 +1,8 @@
+// MCR file header: Frontend\src\pages\mcr-review-detail\components\OverallSummaryTab.tsx
+// This file is part of the MCR application source.
+// Purpose: Source file for the MCR application.
+
+
 
 import type { McrReview } from '../../../types/mcr';
 

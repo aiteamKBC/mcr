@@ -1,3 +1,10 @@
+// MCR file header: Frontend\src\pages\mcr-dashboard\components\KpiCards.tsx
+// This file is part of the MCR application source.
+// Purpose: Source file for the MCR application.
+
+
+import AnimatedNumber from './AnimatedNumber';
+import useReplayOnView from './useReplayOnView';
 import type { DashboardKpis } from '../../../types/mcr';
 
 interface KpiCardsProps {
@@ -61,9 +68,12 @@ const cards = [
     iconBg: 'bg-violet-500',
     textColor: 'text-violet-600',
   },
-];
+] as const;
 
 export default function KpiCards({ kpis, isLoading }: KpiCardsProps) {
+  const { ref, replayKey } = useReplayOnView({ threshold: 0.2 });
+  const isActive = replayKey > 0;
+
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5 mb-6">
@@ -91,25 +101,33 @@ export default function KpiCards({ kpis, isLoading }: KpiCardsProps) {
   const satisfactionScoreDisplayed = Number(kpis.averageSatisfaction.toFixed(1));
   const satisfactionPct = Math.min(100, Math.max(0, Math.round((satisfactionScoreDisplayed / 5) * 100)));
 
-  const getValue = (key: string) => {
+  const getValue = (key: string): { value: number; decimals: number; suffix: string; badgeValue: number | null; badgeSuffix: string } => {
     switch (key) {
-      case 'totalMcrs': return { main: kpis.totalMcrs.toString(), suffix: '', badge: null };
-      case 'green': return { main: kpis.ragDistribution.green.toString(), suffix: '', badge: `${greenPct}%` };
+      case 'totalMcrs':
+        return { value: kpis.totalMcrs, decimals: 0, suffix: '', badgeValue: null, badgeSuffix: '' };
+      case 'green':
+        return { value: kpis.ragDistribution.green, decimals: 0, suffix: '', badgeValue: greenPct, badgeSuffix: '%' };
       case 'averageQaScore':
-        return { main: qaScoreDisplayed.toFixed(1), suffix: '/5.0', badge: `${qaScorePct}%` };
+        return { value: qaScoreDisplayed, decimals: 1, suffix: '/5.0', badgeValue: qaScorePct, badgeSuffix: '%' };
       case 'safeguardingCompletionRate':
-        return { main: safeguardingScoreDisplayed.toFixed(1), suffix: '/5.0', badge: `${kpis.safeguardingCompletionRate}%` };
+        return {
+          value: safeguardingScoreDisplayed,
+          decimals: 1,
+          suffix: '/5.0',
+          badgeValue: kpis.safeguardingCompletionRate,
+          badgeSuffix: '%',
+        };
       case 'averageSatisfaction':
-        return { main: satisfactionScoreDisplayed.toFixed(1), suffix: '/5.0', badge: `${satisfactionPct}%` };
+        return { value: satisfactionScoreDisplayed, decimals: 1, suffix: '/5.0', badgeValue: satisfactionPct, badgeSuffix: '%' };
       default:
-        return { main: '-', suffix: '', badge: null };
+        return { value: 0, decimals: 0, suffix: '', badgeValue: null, badgeSuffix: '' };
     }
   };
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5 mb-6">
-      {cards.map((card) => {
-        const { main, suffix, badge } = getValue(card.key);
+    <div ref={ref} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5 mb-6">
+        {cards.map((card, index) => {
+        const { value, decimals, suffix, badgeValue, badgeSuffix } = getValue(card.key);
         const isPercent = card.key === 'safeguardingCompletionRate';
         const progressPercent = card.key === 'safeguardingCompletionRate'
           ? kpis.safeguardingCompletionRate
@@ -120,15 +138,20 @@ export default function KpiCards({ kpis, isLoading }: KpiCardsProps) {
         return (
           <div
             key={card.key}
-            className={`relative overflow-hidden rounded-[26px] border ${card.border} bg-gradient-to-br ${card.bg} p-6 shadow-[0_16px_40px_rgba(15,23,42,0.05)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_48px_rgba(15,23,42,0.10)]`}
+            className={`relative overflow-hidden rounded-[26px] border ${card.border} bg-gradient-to-br ${card.bg} p-6 shadow-[0_16px_40px_rgba(15,23,42,0.05)] transition-all duration-700 hover:-translate-y-1 hover:shadow-[0_20px_48px_rgba(15,23,42,0.10)]`}
+            style={{ transitionDelay: `${index * 90}ms` }}
           >
             <div className="absolute inset-x-6 bottom-0 h-px bg-gradient-to-r from-transparent via-white/90 to-transparent"></div>
             <div
-              className="absolute -top-5 -right-5 h-24 w-24 rounded-full opacity-[0.08]"
+              className={`absolute -top-5 -right-5 h-24 w-24 rounded-full transition-transform duration-[1400ms] ${
+                isActive ? 'scale-100 rotate-0' : 'scale-75 rotate-[-18deg]'
+              } opacity-[0.08]`}
               style={{ backgroundColor: card.accent }}
             ></div>
             <div
-              className="absolute right-6 top-6 h-16 w-16 rounded-full blur-2xl opacity-20"
+              className={`absolute right-6 top-6 h-16 w-16 rounded-full blur-2xl opacity-20 transition-all duration-1000 ${
+                isActive ? 'scale-100' : 'scale-75'
+              }`}
               style={{ backgroundColor: card.accent }}
             ></div>
 
@@ -136,15 +159,22 @@ export default function KpiCards({ kpis, isLoading }: KpiCardsProps) {
               <div className={`flex h-11 w-11 items-center justify-center rounded-2xl ${card.iconBg} shadow-sm`}>
                 <i className={`${card.icon} text-white text-base`}></i>
               </div>
-              {badge && (
+              {badgeValue !== null && (
                 <span className={`rounded-full border ${card.border} bg-white/85 px-2.5 py-1 text-sm font-bold ${card.textColor}`}>
-                  {badge}
+                  <AnimatedNumber value={badgeValue} decimals={0} durationMs={950} replayKey={replayKey} isActive={isActive} />
+                  {badgeSuffix}
                 </span>
               )}
             </div>
 
             <div className="mb-2 flex items-baseline gap-1.5">
-              <span className="text-[30px] font-black tracking-tight text-slate-900">{main}</span>
+              <AnimatedNumber
+                value={value}
+                decimals={decimals}
+                replayKey={replayKey}
+                isActive={isActive}
+                className="text-[30px] font-black tracking-tight text-slate-900"
+              />
               {suffix && <span className="text-sm font-semibold text-slate-400">{suffix}</span>}
             </div>
 
@@ -155,13 +185,13 @@ export default function KpiCards({ kpis, isLoading }: KpiCardsProps) {
               <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-white/70">
                 <div
                   className="h-full rounded-full transition-all duration-700"
-                  style={{ width: `${progressPercent}%`, backgroundColor: card.accent }}
+                  style={{ width: `${isActive ? progressPercent : 0}%`, backgroundColor: card.accent }}
                 ></div>
               </div>
             )}
           </div>
         );
-      })}
+        })}
     </div>
   );
 }

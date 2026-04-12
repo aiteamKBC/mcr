@@ -1,4 +1,11 @@
-import { useState } from 'react';
+// MCR file header: Frontend\src\pages\mcr-dashboard\components\QaIndicatorsTrendChart.tsx
+// This file is part of the MCR application source.
+// Purpose: Source file for the MCR application.
+
+
+import { useEffect, useState } from 'react';
+import AnimatedNumber from './AnimatedNumber';
+import useReplayOnView from './useReplayOnView';
 
 interface QaIndicatorsTrendChartProps {
   data?: Array<{
@@ -33,8 +40,72 @@ function getRag(score: number) {
   return { label: 'Concern', color: 'text-rose-700', dot: 'bg-rose-500', pill: 'bg-rose-50 text-rose-700' };
 }
 
+function ReplayProgressBar({
+  pct,
+  color,
+  replayKey,
+  delayMs = 0,
+  durationMs = 1200,
+  isActive = true,
+}: {
+  pct: number;
+  color: string;
+  replayKey: number;
+  delayMs?: number;
+  durationMs?: number;
+  isActive?: boolean;
+}) {
+  const [width, setWidth] = useState(0);
+
+  useEffect(() => {
+    if (!isActive) {
+      setWidth(0);
+      return;
+    }
+
+    if (typeof window === 'undefined') {
+      setWidth(pct);
+      return;
+    }
+
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    if (mediaQuery.matches) {
+      setWidth(pct);
+      return;
+    }
+
+    setWidth(0);
+    const timeoutId = window.setTimeout(() => {
+      window.requestAnimationFrame(() => {
+        setWidth(pct);
+      });
+    }, delayMs);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [delayMs, isActive, pct, replayKey]);
+
+  return (
+    <div
+      className="h-full rounded-full ease-out"
+      style={{
+        width: `${width}%`,
+        backgroundColor: color,
+        transitionProperty: 'width, opacity',
+        transitionDuration: `${durationMs}ms`,
+        transitionTimingFunction: 'cubic-bezier(0.22, 1, 0.36, 1)',
+        opacity: width > 0 ? 1 : 0.7,
+        boxShadow: width > 0 ? `0 0 0 1px ${color}22, 0 0 14px ${color}26` : 'none',
+      }}
+    ></div>
+  );
+}
+
 export default function QaIndicatorsTrendChart({ data, isLoading }: QaIndicatorsTrendChartProps) {
   const [selectedPeriod, setSelectedPeriod] = useState<string | null>(null);
+  const { ref, replayKey } = useReplayOnView({ threshold: 0.25 });
+  const isActive = replayKey > 0;
 
   if (isLoading) {
     return (
@@ -55,12 +126,14 @@ export default function QaIndicatorsTrendChart({ data, isLoading }: QaIndicators
   const activeIdx = data.findIndex((d) => d.period === activePeriod);
   const latest = data[activeIdx];
   const prev = activeIdx > 0 ? data[activeIdx - 1] : null;
+  const animationKey = replayKey * 100 + Math.max(activeIdx, 0);
 
   const avg = indicators.reduce((sum, ind) => sum + (latest[ind.key as keyof typeof latest] as number), 0) / indicators.length;
   const rag = getRag(avg);
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 hover:shadow-lg transition-shadow">
+    <div className="relative bg-white rounded-xl border border-slate-200 hover:shadow-lg transition-shadow duration-500">
+      <div ref={ref} className="pointer-events-none absolute inset-x-0 top-0 h-1" aria-hidden="true"></div>
       <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
         <div>
           <h3 className="text-base font-bold text-slate-900">QA Indicators</h3>
@@ -69,9 +142,15 @@ export default function QaIndicatorsTrendChart({ data, isLoading }: QaIndicators
         <div className="flex items-center gap-3">
           <div className="text-right">
             <p className="text-xs text-slate-400 mb-0.5">Overall Avg</p>
-            <p className="text-xl font-bold text-slate-900">{avg.toFixed(1)}</p>
+            <AnimatedNumber
+              value={avg}
+              decimals={1}
+              replayKey={animationKey}
+              isActive={isActive}
+              className="text-xl font-bold text-slate-900"
+            />
           </div>
-          <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full ${rag.pill}`}>
+          <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all duration-500 ${rag.pill}`}>
             <span className={`w-2 h-2 rounded-full ${rag.dot}`}></span>
             <span className={`text-xs font-semibold ${rag.color}`}>{rag.label}</span>
           </div>
@@ -86,9 +165,9 @@ export default function QaIndicatorsTrendChart({ data, isLoading }: QaIndicators
             <button
               key={d.period}
               onClick={() => setSelectedPeriod(d.period)}
-              className={`px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
+              className={`px-3 py-1 rounded-full text-xs font-semibold transition-all duration-300 cursor-pointer whitespace-nowrap ${
                 isActive
-                  ? 'bg-indigo-600 text-white shadow-sm'
+                  ? 'bg-indigo-600 text-white shadow-[0_10px_24px_rgba(99,102,241,0.22)] -translate-y-0.5'
                   : 'bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-700'
               }`}
             >
@@ -99,7 +178,7 @@ export default function QaIndicatorsTrendChart({ data, isLoading }: QaIndicators
       </div>
 
       <div className="divide-y divide-slate-50">
-        {indicators.map((ind) => {
+        {indicators.map((ind, index) => {
           const score = latest[ind.key as keyof typeof latest] as number;
           const prevVal = prev ? (prev[ind.key as keyof typeof prev] as number) : null;
           const delta = prevVal !== null ? +(score - prevVal).toFixed(1) : null;
@@ -107,8 +186,12 @@ export default function QaIndicatorsTrendChart({ data, isLoading }: QaIndicators
           const r = getRag(score);
 
           return (
-            <div key={ind.key} className="flex items-center gap-4 px-6 py-3 hover:bg-slate-50/60 transition-colors">
-              <div className={`w-8 h-8 rounded-lg ${ind.bg} flex items-center justify-center flex-shrink-0`}>
+            <div
+              key={ind.key}
+              className="flex items-center gap-4 px-6 py-3 hover:bg-slate-50/60 transition-all duration-500"
+              style={{ transitionDelay: `${80 + indicators.findIndex((item) => item.key === ind.key) * 70}ms` }}
+            >
+              <div className={`w-8 h-8 rounded-lg ${ind.bg} flex items-center justify-center flex-shrink-0 transition-transform duration-500`}>
                 <i className={`${ind.icon} ${ind.text} text-sm`}></i>
               </div>
 
@@ -117,28 +200,41 @@ export default function QaIndicatorsTrendChart({ data, isLoading }: QaIndicators
               </div>
 
               <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
-                <div
-                  className="h-full rounded-full transition-all duration-500"
-                  style={{ width: `${pct}%`, backgroundColor: ind.color }}
-                ></div>
+                <ReplayProgressBar
+                  pct={pct}
+                  color={ind.color}
+                  replayKey={animationKey}
+                  isActive={isActive}
+                  delayMs={180 + index * 110}
+                  durationMs={1250}
+                />
               </div>
 
               <div className="w-10 text-right flex-shrink-0">
-                <span className="text-sm font-bold text-slate-900">{score.toFixed(1)}</span>
+                <AnimatedNumber
+                  value={score}
+                  decimals={1}
+                  replayKey={animationKey}
+                  isActive={isActive}
+                  durationMs={850}
+                  className="text-sm font-bold text-slate-900"
+                />
               </div>
 
               <div className="w-16 flex items-center justify-end gap-1 flex-shrink-0">
                 {delta !== null && delta > 0 ? (
-                  <span className="flex items-center gap-0.5 text-xs font-semibold text-emerald-600">
-                    <i className="ri-arrow-up-s-line text-sm"></i>+{delta}
-                  </span>
-                ) : delta !== null && delta < 0 ? (
-                  <span className="flex items-center gap-0.5 text-xs font-semibold text-rose-500">
-                    <i className="ri-arrow-down-s-line text-sm"></i>{delta}
-                  </span>
-                ) : (
-                  <span aria-hidden="true"></span>
-                )}
+                    <span className="flex items-center gap-0.5 text-xs font-semibold text-emerald-600">
+                      <i className="ri-arrow-up-s-line text-sm"></i>
+                      +<AnimatedNumber value={delta} decimals={1} replayKey={animationKey} durationMs={800} isActive={isActive} />
+                    </span>
+                  ) : delta !== null && delta < 0 ? (
+                    <span className="flex items-center gap-0.5 text-xs font-semibold text-rose-500">
+                      <i className="ri-arrow-down-s-line text-sm"></i>
+                      <AnimatedNumber value={delta} decimals={1} replayKey={animationKey} durationMs={800} isActive={isActive} />
+                    </span>
+                  ) : (
+                    <span aria-hidden="true"></span>
+                  )}
               </div>
 
               <div className="w-28 flex-shrink-0">

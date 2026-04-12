@@ -1,5 +1,12 @@
+// MCR file header: Frontend\src\pages\mcr-dashboard\components\RecentActivityList.tsx
+// This file is part of the MCR application source.
+// Purpose: Source file for the MCR application.
+
+
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { RecentActivity } from '../../../types/mcr';
+import useReplayOnView from './useReplayOnView';
 
 interface RecentActivityListProps {
   activities?: RecentActivity[];
@@ -8,6 +15,35 @@ interface RecentActivityListProps {
 
 export default function RecentActivityList({ activities, isLoading }: RecentActivityListProps) {
   const navigate = useNavigate();
+  const { ref, replayKey } = useReplayOnView({ threshold: 0.2 });
+  const [animateItems, setAnimateItems] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      setAnimateItems(true);
+      return;
+    }
+
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    if (mediaQuery.matches) {
+      setAnimateItems(true);
+      return;
+    }
+
+    if (replayKey === 0) {
+      setAnimateItems(false);
+      return;
+    }
+
+    setAnimateItems(false);
+    const frameId = window.requestAnimationFrame(() => {
+      setAnimateItems(true);
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+    };
+  }, [replayKey]);
 
   if (isLoading) {
     return (
@@ -84,34 +120,40 @@ export default function RecentActivityList({ activities, isLoading }: RecentActi
   };
 
   return (
-    <div className="rounded-[30px] border border-white/75 bg-white/90 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.06)] transition-shadow hover:shadow-[0_24px_70px_rgba(15,23,42,0.08)]">
+    <div
+      ref={ref}
+      className="rounded-[30px] border border-white/75 bg-white/90 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.06)] transition-all duration-500 hover:shadow-[0_24px_70px_rgba(15,23,42,0.08)]"
+    >
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h3 className="text-lg font-bold text-slate-900">Recent Activity</h3>
           <p className="mt-1 text-sm text-slate-600">Latest MCR updates and completions</p>
         </div>
-        <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-indigo-100 bg-indigo-50">
+        <div className={`flex h-11 w-11 items-center justify-center rounded-2xl border border-indigo-100 bg-indigo-50 transition-all duration-700 ${
+          animateItems ? 'scale-100 rotate-0 shadow-[0_10px_24px_rgba(99,102,241,0.10)]' : 'scale-75 rotate-[-18deg]'
+        }`}>
           <i className="ri-time-line text-indigo-600 text-xl"></i>
         </div>
       </div>
 
       <div className="space-y-3">
-        {activities.map((activity) => (
+        {activities.map((activity, index) => (
           <div
             key={activity.reviewId}
-            className="group flex cursor-pointer items-center gap-4 rounded-2xl border border-indigo-100/80 bg-[linear-gradient(180deg,_#ffffff_0%,_#f5f9ff_100%)] p-4 transition-all hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-[0_12px_30px_rgba(15,23,42,0.06)]"
+            className={`group flex cursor-pointer items-center gap-4 rounded-2xl border border-indigo-100/80 bg-[linear-gradient(180deg,_#ffffff_0%,_#f5f9ff_100%)] p-4 transition-all duration-700 hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-[0_12px_30px_rgba(15,23,42,0.06)] ${
+              animateItems ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-5 opacity-0 scale-[0.985]'
+            }`}
+            style={{ transitionDelay: `${100 + index * 85}ms` }}
             onClick={() => navigate(`/mcr/reviews/${activity.reviewId}`)}
           >
-            {/* RAG Status Icon */}
-            <div className={`h-12 w-12 flex-shrink-0 rounded-2xl border flex items-center justify-center ${getRagBadgeStyles(activity.ragStatus)}`}>
+            <div className={`h-12 w-12 flex-shrink-0 rounded-2xl border flex items-center justify-center transition-all duration-500 ${getRagBadgeStyles(activity.ragStatus)} ${animateItems ? 'scale-100' : 'scale-75'}`}>
               <i className={`${getRagIcon(activity.ragStatus)} text-xl`}></i>
             </div>
 
-            {/* Content */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
                 <h4 className="text-sm font-bold text-slate-900 truncate">{activity.learnerName}</h4>
-                <span className={`rounded-full border px-2 py-0.5 text-xs font-semibold ${getRagBadgeStyles(activity.ragStatus)}`}>
+                <span className={`rounded-full border px-2 py-0.5 text-xs font-semibold transition-all duration-500 ${getRagBadgeStyles(activity.ragStatus)}`}>
                   {activity.ragStatus}
                 </span>
               </div>
@@ -128,7 +170,6 @@ export default function RecentActivityList({ activities, isLoading }: RecentActi
               </div>
             </div>
 
-            {/* Time & Action */}
             <div className="flex flex-shrink-0 items-center gap-3">
               <div className="text-right">
                 <div className="text-xs font-medium text-slate-600">{formatTimeAgo(activity.updatedAt)}</div>
@@ -141,11 +182,13 @@ export default function RecentActivityList({ activities, isLoading }: RecentActi
         ))}
       </div>
 
-      {/* View All Button */}
       <div className="mt-6 border-t border-slate-200 pt-4">
         <button
           onClick={() => navigate('/mcr/reviews')}
-          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-50 to-blue-50 px-4 py-3 font-medium text-indigo-700 transition-colors hover:from-indigo-600 hover:to-blue-500 hover:text-white cursor-pointer whitespace-nowrap"
+          className={`flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-50 to-blue-50 px-4 py-3 font-medium text-indigo-700 transition-all duration-700 hover:from-indigo-600 hover:to-blue-500 hover:text-white cursor-pointer whitespace-nowrap ${
+            animateItems ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'
+          }`}
+          style={{ transitionDelay: `${180 + activities.length * 85}ms` }}
         >
           <span>View All Reviews</span>
           <i className="ri-arrow-right-line"></i>
@@ -154,4 +197,3 @@ export default function RecentActivityList({ activities, isLoading }: RecentActi
     </div>
   );
 }
-

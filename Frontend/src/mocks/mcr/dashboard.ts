@@ -1,3 +1,8 @@
+// MCR file header: Frontend\src\mocks\mcr\dashboard.ts
+// This file is part of the MCR application source.
+// Purpose: Source file for the MCR application.
+
+
 import type { DashboardMetrics } from '../../types/mcr';
 
 export const mockDashboardData: DashboardMetrics = {

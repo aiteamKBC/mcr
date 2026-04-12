@@ -1,3 +1,8 @@
+// MCR file header: Frontend\src\main.tsx
+// This file is part of the MCR application source.
+// Purpose: Source file for the MCR application.
+
+
 import { StrictMode } from 'react'
 import './i18n'
 import { createRoot } from 'react-dom/client'

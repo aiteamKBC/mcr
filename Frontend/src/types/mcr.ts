@@ -1,10 +1,13 @@
+// MCR file header: Frontend\src\types\mcr.ts
+// This file is part of the MCR application source.
+// Purpose: Source file for the MCR application.
+
+
 // MCR Review Types
 
 export type RagStatus = 'Red' | 'Amber' | 'Green';
 export type QualitativeRating = 'Outstanding' | 'Good' | 'Requires Improvement' | 'Inadequate';
 export type TriStateStatus = 'Met' | 'Partially Met' | 'Not Met';
-export type RecipientType = 'Employer' | 'Learner' | 'QA';
-export type DeliveryStatus = 'Sent' | 'Pending' | 'Failed' | 'Delivered';
 export type UserRole = 'admin' | 'qa' | 'coach' | 'employer' | 'learner';
 
 export interface NamedEntity {
@@ -36,11 +39,6 @@ export interface McrReview {
   safeguardingFlagged: boolean;
   satisfactionScore: number;
   overallQaScore: number;
-  communicatedTo: {
-    employer: boolean;
-    learner: boolean;
-    qa: boolean;
-  };
   meetingSections?: MeetingSectionTiming[];
   qaIndicators?: QaIndicatorEvaluation[];
   safeguardingChecklist?: SafeguardingChecklistItem[];
@@ -49,7 +47,6 @@ export interface McrReview {
   transcriptEvidence?: TranscriptEvidenceItem[];
   overallSummary?: OverallSummary;
   attachments?: Attachment[];
-  communicationLog?: CommunicationLogEntry[];
 }
 
 // Meeting Section Timing
@@ -113,20 +110,15 @@ export interface OverallSummary {
 
 // Attachment
 export interface Attachment {
+  id?: string;
   name: string;
   url: string;
+  downloadUrl?: string;
   type: string;
   size?: number;
-}
-
-// Communication Log Entry
-export interface CommunicationLogEntry {
-  id: string;
-  recipientType: RecipientType;
-  sentAt: string;
-  sentBy: string;
-  status: DeliveryStatus;
-  notes: string;
+  uploadedAt?: string;
+  uploadedBy?: string;
+  visibleToLearner?: boolean;
 }
 
 // Current User
@@ -146,7 +138,6 @@ export interface McrReviewDetail extends McrReview {
   satisfaction: Satisfaction;
   evidenceItems: EvidenceItem[];
   attachments: Attachment[];
-  communicationLog: CommunicationLogEntry[];
   overallSummary: {
     overallRating?: string;
     executiveSummary: string;

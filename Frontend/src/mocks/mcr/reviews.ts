@@ -1,3 +1,8 @@
+// MCR file header: Frontend\src\mocks\mcr\reviews.ts
+// This file is part of the MCR application source.
+// Purpose: Source file for the MCR application.
+
+
 import type { McrReview, NamedEntity, RagStatus } from '../../types/mcr';
 
 const entity = (id: string, name: string, email?: string): NamedEntity => ({
@@ -19,7 +24,6 @@ const makeReview = (input: {
   safeguardingFlagged: boolean;
   satisfactionScore: number;
   overallQaScore: number;
-  communicatedTo: { employer: boolean; learner: boolean; qa: boolean };
 }): McrReview => ({
   id: input.id,
   date: input.date,
@@ -36,7 +40,6 @@ const makeReview = (input: {
   safeguardingFlagged: input.safeguardingFlagged,
   satisfactionScore: input.satisfactionScore,
   overallQaScore: input.overallQaScore,
-  communicatedTo: input.communicatedTo,
 });
 
 export const reviews: McrReview[] = [
@@ -53,7 +56,6 @@ export const reviews: McrReview[] = [
     safeguardingFlagged: false,
     satisfactionScore: 4.8,
     overallQaScore: 4.7,
-    communicatedTo: { employer: true, learner: true, qa: true },
   }),
   makeReview({
     id: 'mcr-002',
@@ -68,7 +70,6 @@ export const reviews: McrReview[] = [
     safeguardingFlagged: false,
     satisfactionScore: 3.9,
     overallQaScore: 3.8,
-    communicatedTo: { employer: true, learner: true, qa: false },
   }),
   makeReview({
     id: 'mcr-003',
@@ -83,7 +84,6 @@ export const reviews: McrReview[] = [
     safeguardingFlagged: true,
     satisfactionScore: 2.5,
     overallQaScore: 2.8,
-    communicatedTo: { employer: false, learner: true, qa: true },
   }),
   makeReview({
     id: 'mcr-004',
@@ -98,7 +98,6 @@ export const reviews: McrReview[] = [
     safeguardingFlagged: false,
     satisfactionScore: 4.2,
     overallQaScore: 3.9,
-    communicatedTo: { employer: true, learner: false, qa: true },
   }),
   makeReview({
     id: 'mcr-005',
@@ -113,7 +112,6 @@ export const reviews: McrReview[] = [
     safeguardingFlagged: false,
     satisfactionScore: 4.7,
     overallQaScore: 4.6,
-    communicatedTo: { employer: true, learner: true, qa: true },
   }),
   makeReview({
     id: 'mcr-006',
@@ -128,7 +126,6 @@ export const reviews: McrReview[] = [
     safeguardingFlagged: true,
     satisfactionScore: 2.1,
     overallQaScore: 2.0,
-    communicatedTo: { employer: true, learner: true, qa: true },
   }),
 ];
 

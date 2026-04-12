@@ -1,3 +1,8 @@
+// MCR file header: Frontend\src\pages\mcr-dashboard\components\StatusDonutChart.tsx
+// This file is part of the MCR application source.
+// Purpose: Source file for the MCR application.
+
+
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import type { ReportRecord } from '../../../types/reports';
 

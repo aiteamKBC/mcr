@@ -1,3 +1,8 @@
+// MCR file header: Frontend\src\utils\apiClient.ts
+// This file is part of the MCR application source.
+// Purpose: Source file for the MCR application.
+
+
 import axios from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || '';
@@ -34,13 +39,6 @@ export const mcrApi = {
   
   updateReview: (id: string | number, data: Record<string, unknown>) => 
     apiClient.patch(`${MCR_API_BASE}/reviews/${id}`, data),
-
-  // Communication log endpoints
-  getCommunicationLog: (reviewId: string | number) => 
-    apiClient.get(`${MCR_API_BASE}/reviews/${reviewId}/communications`),
-  
-  addCommunicationLog: (reviewId: string | number, data: Record<string, unknown>) => 
-    apiClient.post(`${MCR_API_BASE}/reviews/${reviewId}/communications`, data),
 
   // Filter options endpoints
   getCoaches: () => 

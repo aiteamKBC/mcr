@@ -1,3 +1,8 @@
+// MCR file header: Frontend\src\components\DatePickerInput.tsx
+// This file is part of the MCR application source.
+// Purpose: Source file for the MCR application.
+
+
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   addMonths,

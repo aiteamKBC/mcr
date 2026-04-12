@@ -1,3 +1,8 @@
+// MCR file header: Frontend\src\providers\QueryProvider.tsx
+// This file is part of the MCR application source.
+// Purpose: Source file for the MCR application.
+
+
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactNode } from 'react';
 

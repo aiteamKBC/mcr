@@ -1,4 +1,9 @@
-﻿import { defineConfig } from "vite";
+// MCR file header: Frontend\vite.config.ts
+// This file is part of the MCR application source.
+// Purpose: Source file for the MCR application.
+
+
+import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import { resolve } from "node:path";
 import AutoImport from "unplugin-auto-import/vite";

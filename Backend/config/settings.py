@@ -1,3 +1,8 @@
+# MCR file header: Backend\config\settings.py
+# This file is part of the MCR application source.
+# Purpose: Source file for the MCR application.
+
+
 """
 Django settings for config project.
 
@@ -90,13 +95,29 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-DATABASES = {
-    "default": dj_database_url.config(
-        default=os.getenv("DATABASE_URL"),
-        conn_max_age=600,
-        ssl_require=True,
-    )
+_default_database_url = (os.getenv("DATABASE_URL") or "").strip()
+_default_database_config = {
+    "default": _default_database_url or None,
+    "conn_max_age": 600,
 }
+if not _default_database_url.startswith("sqlite"):
+    _default_database_config["ssl_require"] = True
+
+DATABASES = {
+    "default": dj_database_url.config(**_default_database_config)
+}
+
+_kbc_users_database_url = os.getenv("KBC_USERS_DATABASE_URL", "").strip()
+if _kbc_users_database_url:
+    _kbc_users_database_config = {
+        "conn_max_age": 600,
+    }
+    if not _kbc_users_database_url.startswith("sqlite"):
+        _kbc_users_database_config["ssl_require"] = True
+    DATABASES["kbc_users"] = dj_database_url.parse(
+        _kbc_users_database_url,
+        **_kbc_users_database_config,
+    )
 
 REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
@@ -160,11 +181,13 @@ USE_TZ = True
 
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
 
 # Email (MCR “Mark as communicated” notifications)
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "mcr@localhost")
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
-MCR_QA_NOTIFICATION_EMAIL = os.getenv("MCR_QA_NOTIFICATION_EMAIL", "")
+MCR_QA_NOTIFICATION_EMAIL = os.getenv("MCR_QA_NOTIFICATION_EMAIL", "").strip()
 MCR_N8N_COMMUNICATION_WEBHOOK = os.getenv("MCR_N8N_COMMUNICATION_WEBHOOK", "").strip()
 MCR_PUBLIC_BASE_URL = os.getenv("MCR_PUBLIC_BASE_URL", "").rstrip("/")
 

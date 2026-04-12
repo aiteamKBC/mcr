@@ -1,3 +1,8 @@
+// MCR file header: Frontend\src\types\index.ts
+// This file is part of the MCR application source.
+// Purpose: Source file for the MCR application.
+
+
 export interface DoctorSummary {
   total_sessions: number;
   avg_duration: number;

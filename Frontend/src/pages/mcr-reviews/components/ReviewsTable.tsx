@@ -1,3 +1,8 @@
+// MCR file header: Frontend\src\pages\mcr-reviews\components\ReviewsTable.tsx
+// This file is part of the MCR application source.
+// Purpose: Source file for the MCR application.
+
+
 import { useState } from 'react';
 import RagBadge from '../../../components/RagBadge';
 import type { EntityRef, McrReview } from '../../../types/mcr';
@@ -33,10 +38,6 @@ export default function ReviewsTable({
 
   const handleExport = (id: string) => {
     window.REACT_APP_NAVIGATE(`/mcr/reviews/${id}/print`);
-  };
-
-  const handleCommunicationLog = (id: string) => {
-    window.REACT_APP_NAVIGATE(`/mcr/reviews/${id}?tab=communication`);
   };
 
   return (
@@ -106,9 +107,6 @@ export default function ReviewsTable({
               </th>
               <th className="px-4 py-3 text-center text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 whitespace-nowrap">
                 Satisfaction
-              </th>
-              <th className="px-4 py-3 text-center text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 whitespace-nowrap">
-                Communicated
               </th>
               <th className="px-4 py-3 text-center text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 whitespace-nowrap">
                 Actions
@@ -204,46 +202,6 @@ export default function ReviewsTable({
                   </div>
                 </td>
                 <td className="px-4 py-4 text-center">
-                  <div className="flex items-center justify-center gap-1">
-                    <div
-                      className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                        review.communicatedTo.employer ? 'bg-green-100' : 'bg-gray-100'
-                      }`}
-                      title={review.communicatedTo.employer ? 'Employer notified' : 'Employer not notified'}
-                    >
-                      <i
-                        className={`ri-briefcase-line text-xs ${
-                          review.communicatedTo.employer ? 'text-green-600' : 'text-gray-400'
-                        }`}
-                      ></i>
-                    </div>
-                    <div
-                      className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                        review.communicatedTo.learner ? 'bg-green-100' : 'bg-gray-100'
-                      }`}
-                      title={review.communicatedTo.learner ? 'Learner notified' : 'Learner not notified'}
-                    >
-                      <i
-                        className={`ri-user-line text-xs ${
-                          review.communicatedTo.learner ? 'text-green-600' : 'text-gray-400'
-                        }`}
-                      ></i>
-                    </div>
-                    <div
-                      className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                        review.communicatedTo.qa ? 'bg-green-100' : 'bg-gray-100'
-                      }`}
-                      title={review.communicatedTo.qa ? 'QA notified' : 'QA not notified'}
-                    >
-                      <i
-                        className={`ri-shield-check-line text-xs ${
-                          review.communicatedTo.qa ? 'text-green-600' : 'text-gray-400'
-                        }`}
-                      ></i>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-4 py-4 text-center">
                   <div className="relative">
                     <button
                       onClick={(e) => {
@@ -285,17 +243,6 @@ export default function ReviewsTable({
                           >
                             <i className="ri-download-line text-indigo-600"></i>
                             Export Report
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleCommunicationLog(review.id);
-                              setActionMenuOpen(null);
-                            }}
-                            className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm text-slate-700 transition-colors hover:bg-slate-50 cursor-pointer"
-                          >
-                            <i className="ri-message-3-line text-violet-600"></i>
-                            Communication Log
                           </button>
                         </div>
                       </>

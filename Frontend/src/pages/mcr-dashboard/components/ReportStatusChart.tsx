@@ -1,3 +1,8 @@
+// MCR file header: Frontend\src\pages\mcr-dashboard\components\ReportStatusChart.tsx
+// This file is part of the MCR application source.
+// Purpose: Source file for the MCR application.
+
+
 
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } from 'recharts';
 import type { ReportRecord } from '../../../types/reports';

@@ -1,5 +1,12 @@
+// MCR file header: Frontend\src\pages\mcr-review-detail\components\SafeguardingTab.tsx
+// This file is part of the MCR application source.
+// Purpose: Source file for the MCR application.
+
+
 import { useState } from 'react';
 import type { McrReview } from '../../../types/mcr';
+import useReplayOnView from '../../mcr-dashboard/components/useReplayOnView';
+import ReplayProgressFill from './ReplayProgressFill';
 
 interface SafeguardingTabProps {
   review: McrReview;
@@ -17,6 +24,8 @@ const statusConfig: Record<BinarySafeguardingStatus, { bg: string; text: string;
 
 export default function SafeguardingTab({ review }: SafeguardingTabProps) {
   const [expanded, setExpanded] = useState<string | null>(null);
+  const { ref, replayKey } = useReplayOnView({ threshold: 0.2 });
+  const isActive = replayKey > 0;
 
   const checklist = review.safeguardingChecklist ?? [];
   const satisfaction = review.satisfaction ?? { score0to5: 0, comments: '' };
@@ -30,7 +39,7 @@ export default function SafeguardingTab({ review }: SafeguardingTabProps) {
   const osc = statusConfig[overallStatus];
 
   return (
-    <div className="space-y-5">
+    <div ref={ref} className="space-y-5">
 
       <div className={`rounded-xl border ${osc.border} ${osc.bg} px-6 py-5 flex items-center justify-between`}>
         <div className="flex items-center gap-4">
@@ -96,9 +105,13 @@ export default function SafeguardingTab({ review }: SafeguardingTabProps) {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-gray-800">{item.label}</p>
                     <div className="mt-1.5 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full rounded-full transition-all ${sc.bar}`}
-                        style={{ width: `${barPct}%` }}
+                      <ReplayProgressFill
+                        pct={barPct}
+                        className={`h-full rounded-full ${sc.bar}`}
+                        replayKey={replayKey}
+                        isActive={isActive}
+                        delayMs={160 + idx * 95}
+                        durationMs={1250}
                       />
                     </div>
                   </div>
@@ -158,9 +171,13 @@ export default function SafeguardingTab({ review }: SafeguardingTabProps) {
         </div>
 
         <div className="h-2 bg-gray-100 rounded-full overflow-hidden mb-4">
-          <div
-            className="h-full bg-gradient-to-r from-amber-400 to-amber-500 rounded-full transition-all"
-            style={{ width: `${(satisfaction.score0to5 / 5) * 100}%` }}
+          <ReplayProgressFill
+            pct={(satisfaction.score0to5 / 5) * 100}
+            className="h-full bg-gradient-to-r from-amber-400 to-amber-500 rounded-full"
+            replayKey={replayKey}
+            isActive={isActive}
+            delayMs={220}
+            durationMs={1350}
           />
         </div>
 

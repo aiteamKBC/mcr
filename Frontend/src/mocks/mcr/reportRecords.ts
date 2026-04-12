@@ -1,3 +1,8 @@
+// MCR file header: Frontend\src\mocks\mcr\reportRecords.ts
+// This file is part of the MCR application source.
+// Purpose: Source file for the MCR application.
+
+
 import { ReportRecord } from '../../types/reports';
 
 export const mockReportRecords: ReportRecord[] = [

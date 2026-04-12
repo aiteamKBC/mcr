@@ -1,3 +1,8 @@
+# MCR file header: Backend\config\wsgi.py
+# This file is part of the MCR application source.
+# Purpose: Source file for the MCR application.
+
+
 """
 WSGI config for config project.
 

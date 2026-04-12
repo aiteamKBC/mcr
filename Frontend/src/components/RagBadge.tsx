@@ -1,3 +1,8 @@
+// MCR file header: Frontend\src\components\RagBadge.tsx
+// This file is part of the MCR application source.
+// Purpose: Source file for the MCR application.
+
+
 import type { RagStatus } from '../types/mcr';
 
 interface RagBadgeProps {

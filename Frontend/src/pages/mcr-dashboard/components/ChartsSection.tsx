@@ -1,3 +1,8 @@
+// MCR file header: Frontend\src\pages\mcr-dashboard\components\ChartsSection.tsx
+// This file is part of the MCR application source.
+// Purpose: Source file for the MCR application.
+
+
 import StatusDonutChart from './StatusDonutChart';
 import DailyVolumeBarChart from './DailyVolumeBarChart';
 import RagDistributionChart from './RagDistributionChart';

@@ -1,3 +1,8 @@
+// MCR file header: Frontend\src\pages\mcr-dashboard\components\RecentReportsTable.tsx
+// This file is part of the MCR application source.
+// Purpose: Source file for the MCR application.
+
+
 import { useState } from 'react';
 import DropdownSelect from '../../../components/DropdownSelect';
 import { ReportRecord } from '../../../types/reports';

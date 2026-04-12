@@ -1,3 +1,8 @@
+// MCR file header: Frontend\src\pages\mcr-dashboard\components\FiltersPanel.tsx
+// This file is part of the MCR application source.
+// Purpose: Source file for the MCR application.
+
+
 import DatePickerInput from '../../../components/DatePickerInput';
 import DropdownSelect from '../../../components/DropdownSelect';
 import type { DashboardFilters, FilterOptions } from '../../../types/mcr';

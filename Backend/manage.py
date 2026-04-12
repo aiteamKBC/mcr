@@ -1,4 +1,11 @@
+# MCR file header: Backend\manage.py
+# This file is part of the MCR application source.
+# Purpose: Source file for the MCR application.
+
 #!/usr/bin/env python
+# MCR file header: Backend\manage.py
+# This file is part of the MCR application source.
+
 """Django's command-line utility for administrative tasks."""
 import os
 import sys

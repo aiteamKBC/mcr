@@ -1,3 +1,8 @@
+// MCR file header: Frontend\src\router\index.ts
+// This file is part of the MCR application source.
+// Purpose: Source file for the MCR application.
+
+
 import { useNavigate, type NavigateFunction } from "react-router-dom";
 import { useRoutes } from "react-router-dom";
 import { useEffect } from "react";

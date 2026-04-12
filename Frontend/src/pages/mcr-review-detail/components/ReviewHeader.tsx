@@ -1,3 +1,8 @@
+// MCR file header: Frontend\src\pages\mcr-review-detail\components\ReviewHeader.tsx
+// This file is part of the MCR application source.
+// Purpose: Source file for the MCR application.
+
+
 
 import type { EntityRef, McrReview } from '../../../types/mcr';
 import RagBadge from '../../../components/RagBadge';

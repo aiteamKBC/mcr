@@ -1,3 +1,8 @@
+// MCR file header: Frontend\src\utils\meetingDisplay.ts
+// This file is part of the MCR application source.
+// Purpose: Source file for the MCR application.
+
+
 import { format } from 'date-fns';
 import type { McrReview } from '../types/mcr';
 

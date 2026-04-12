@@ -1,3 +1,8 @@
+// MCR file header: Frontend\src\mocks\mcr\reviewDetail.ts
+// This file is part of the MCR application source.
+// Purpose: Source file for the MCR application.
+
+
 import type { McrReview } from '../../types/mcr';
 
 export const mockReviewDetail: McrReview = {
@@ -14,11 +19,6 @@ export const mockReviewDetail: McrReview = {
   safeguardingFlagged: false,
   satisfactionScore: 4.7,
   overallQaScore: 4.6,
-  communicatedTo: {
-    employer: true,
-    learner: true,
-    qa: true,
-  },
   createdAt: '2024-01-15T10:00:00Z',
   updatedAt: '2024-01-15T11:30:00Z',
   meetingSections: [
@@ -278,32 +278,6 @@ export const mockReviewDetail: McrReview = {
       url: 'https://example.com/attachments/action-plan-feb-2024.docx',
       type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
       size: 327680,
-    },
-  ],
-  communicationLog: [
-    {
-      id: 'comm-001',
-      recipientType: 'Learner',
-      sentAt: '2024-01-15T12:00:00Z',
-      sentBy: 'Dr. Sarah Johnson',
-      status: 'Sent',
-      notes: 'MCR summary and action points sent to learner. Confirmed receipt and understanding of next steps.',
-    },
-    {
-      id: 'comm-002',
-      recipientType: 'Employer',
-      sentAt: '2024-01-15T14:30:00Z',
-      sentBy: 'Dr. Sarah Johnson',
-      status: 'Sent',
-      notes: 'Progress report sent to employer line manager. Highlighted excellent progress and recommended continued support for workplace learning activities.',
-    },
-    {
-      id: 'comm-003',
-      recipientType: 'QA',
-      sentAt: '2024-01-15T16:00:00Z',
-      sentBy: 'System',
-      status: 'Sent',
-      notes: 'MCR data automatically submitted to APTEM quality assurance system. All required fields completed and validated.',
     },
   ],
 };

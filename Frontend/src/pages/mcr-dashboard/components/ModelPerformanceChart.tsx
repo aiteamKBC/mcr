@@ -1,3 +1,8 @@
+// MCR file header: Frontend\src\pages\mcr-dashboard\components\ModelPerformanceChart.tsx
+// This file is part of the MCR application source.
+// Purpose: Source file for the MCR application.
+
+
 import type { ReportRecord } from '../../../types/reports';
 
 interface ModelPerformanceChartProps {

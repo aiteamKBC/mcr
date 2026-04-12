@@ -1,3 +1,8 @@
+// MCR file header: Frontend\src\pages\mcr-reviews\components\ReviewsFilters.tsx
+// This file is part of the MCR application source.
+// Purpose: Source file for the MCR application.
+
+
 import DatePickerInput from '../../../components/DatePickerInput';
 import { useEffect, useRef, useState } from 'react';
 import DropdownSelect from '../../../components/DropdownSelect';

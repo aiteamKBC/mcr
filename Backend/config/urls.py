@@ -1,4 +1,9 @@
-﻿from django.contrib import admin
+# MCR file header: Backend\config\urls.py
+# This file is part of the MCR application source.
+# Purpose: Source file for the MCR application.
+
+
+from django.contrib import admin
 from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 

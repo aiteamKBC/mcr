@@ -1,3 +1,8 @@
+// MCR file header: Frontend\src\types\reports.ts
+// This file is part of the MCR application source.
+// Purpose: Source file for the MCR application.
+
+
 export interface ReportRecord {
   id: number;
   status: 'completed' | 'failed' | 'pending' | 'processing';

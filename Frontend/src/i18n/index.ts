@@ -1,3 +1,8 @@
+// MCR file header: Frontend\src\i18n\index.ts
+// This file is part of the MCR application source.
+// Purpose: Source file for the MCR application.
+
+
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';

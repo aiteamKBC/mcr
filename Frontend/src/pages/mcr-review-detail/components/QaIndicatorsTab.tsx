@@ -1,6 +1,13 @@
+// MCR file header: Frontend\src\pages\mcr-review-detail\components\QaIndicatorsTab.tsx
+// This file is part of the MCR application source.
+// Purpose: Source file for the MCR application.
+
+
 
 import { useState } from 'react';
 import type { McrReview } from '../../../types/mcr';
+import useReplayOnView from '../../mcr-dashboard/components/useReplayOnView';
+import ReplayProgressFill from './ReplayProgressFill';
 
 interface QaIndicatorsTabProps {
   review: McrReview;
@@ -25,6 +32,8 @@ const statusConfig = {
 
 export default function QaIndicatorsTab({ review }: QaIndicatorsTabProps) {
   const [expanded, setExpanded] = useState<string | null>(null);
+  const { ref, replayKey } = useReplayOnView({ threshold: 0.2 });
+  const isActive = replayKey > 0;
 
   const indicators = (review.qaIndicators ?? []).filter(
     (ind) => Object.keys(INDICATOR_LABELS).includes(ind.indicatorKey)
@@ -49,7 +58,7 @@ export default function QaIndicatorsTab({ review }: QaIndicatorsTabProps) {
   const overall = getOverallLabel(overallScore);
 
   return (
-    <div className="space-y-5">
+    <div ref={ref} className="space-y-5">
 
       {/* â”€â”€ Overall Score Banner â”€â”€ */}
       <div className={`rounded-xl border ${overall.border} ${overall.bg} px-6 py-5 flex items-center justify-between`}>
@@ -78,7 +87,7 @@ export default function QaIndicatorsTab({ review }: QaIndicatorsTabProps) {
         </div>
       </div>
 
-      {/* â”€â”€ Indicator Cards â”€â”€ */}
+    
       <div className="bg-white rounded-xl border border-gray-100 divide-y divide-gray-50">
         {indicators.map((ind, idx) => {
           const label = INDICATOR_LABELS[ind.indicatorKey] ?? ind.indicatorName;
@@ -101,9 +110,13 @@ export default function QaIndicatorsTab({ review }: QaIndicatorsTabProps) {
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-gray-800">{label}</p>
                   <div className="mt-1.5 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all ${sc.bar}`}
-                      style={{ width: `${fillPct}%` }}
+                    <ReplayProgressFill
+                      pct={fillPct}
+                      className={`h-full rounded-full ${sc.bar}`}
+                      replayKey={replayKey}
+                      isActive={isActive}
+                      delayMs={160 + idx * 95}
+                      durationMs={1250}
                     />
                   </div>
                 </div>
@@ -155,7 +168,6 @@ export default function QaIndicatorsTab({ review }: QaIndicatorsTabProps) {
         })}
       </div>
 
-      {/* â”€â”€ Score Distribution â”€â”€ */}
       <div className="bg-white rounded-xl border border-gray-100 px-6 py-5">
         <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-4">Score Distribution</p>
         <div className="grid grid-cols-4 gap-4">

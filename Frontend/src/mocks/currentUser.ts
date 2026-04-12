@@ -1,3 +1,8 @@
+// MCR file header: Frontend\src\mocks\currentUser.ts
+// This file is part of the MCR application source.
+// Purpose: Source file for the MCR application.
+
+
 export type UserRole = 'admin' | 'qa' | 'coach' | 'employer' | 'learner';
 
 export interface CurrentUser {
@@ -27,7 +32,6 @@ export const permissions = {
   canEditReview: hasPermission(['admin', 'qa', 'coach']),
   canExportReview: hasPermission(['admin', 'qa', 'coach', 'employer']),
   canViewAllReviews: hasPermission(['admin', 'qa']),
-  canAddCommunicationLog: hasPermission(['admin', 'qa', 'coach']),
   canViewDashboard: hasPermission(['admin', 'qa', 'coach']),
   canDeleteReview: hasPermission(['admin']),
 };

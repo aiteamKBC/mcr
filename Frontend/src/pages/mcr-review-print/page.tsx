@@ -1,3 +1,8 @@
+// MCR file header: Frontend\src\pages\mcr-review-print\page.tsx
+// This file is part of the MCR application source.
+// Purpose: Source file for the MCR application.
+
+
 import { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';

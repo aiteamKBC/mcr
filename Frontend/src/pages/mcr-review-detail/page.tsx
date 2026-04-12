@@ -1,3 +1,8 @@
+// MCR file header: Frontend\src\pages\mcr-review-detail\page.tsx
+// This file is part of the MCR application source.
+// Purpose: Source file for the MCR application.
+
+
 import { useParams, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getReviewById } from '../../utils/mcrApiClient';
@@ -10,9 +15,8 @@ import SafeguardingTab from './components/SafeguardingTab';
 import KsbEvidenceTab from './components/KsbEvidenceTab';
 import OverallSummaryTab from './components/OverallSummaryTab';
 import AttachmentsTab from './components/AttachmentsTab';
-import CommunicationLogTab from './components/CommunicationLogTab';
 
-type TabType = 'meeting' | 'qa' | 'safeguarding' | 'ksb' | 'summary' | 'attachments' | 'communication';
+type TabType = 'meeting' | 'qa' | 'safeguarding' | 'ksb' | 'summary' | 'attachments';
 
 const TABS: { key: TabType; label: string; icon: string }[] = [
   { key: 'meeting',       label: 'Meeting Structure', icon: 'ri-time-line' },
@@ -21,7 +25,6 @@ const TABS: { key: TabType; label: string; icon: string }[] = [
   { key: 'ksb',           label: 'KSB Evidence',      icon: 'ri-file-list-line' },
   { key: 'summary',       label: 'Overall Summary',   icon: 'ri-file-text-line' },
   { key: 'attachments',   label: 'Attachments',       icon: 'ri-attachment-line' },
-  { key: 'communication', label: 'Communication Log', icon: 'ri-mail-line' },
 ];
 
 const getOverviewByTab = (tab: TabType, review: McrReview) => {
@@ -30,7 +33,6 @@ const getOverviewByTab = (tab: TabType, review: McrReview) => {
   const checklist = review.safeguardingChecklist ?? [];
   const evidenceItems = review.evidenceItems ?? [];
   const attachments = review.attachments ?? [];
-  const communicationLog = review.communicationLog ?? [];
 
   const totalPlanned = meetingSections.reduce((sum, s) => sum + s.plannedMin, 0);
   const totalVariance = review.totalDurationMin - totalPlanned;
@@ -40,7 +42,6 @@ const getOverviewByTab = (tab: TabType, review: McrReview) => {
       : 0;
   const metChecklist = checklist.filter((c) => c.status === 'Met').length;
   const completionPct = checklist.length > 0 ? Math.round((metChecklist / checklist.length) * 100) : 0;
-  const sentOrDelivered = communicationLog.filter((e) => e.status === 'Sent' || e.status === 'Delivered').length;
 
   switch (tab) {
     case 'meeting':
@@ -95,15 +96,6 @@ const getOverviewByTab = (tab: TabType, review: McrReview) => {
           `Total Files = number of items in attachments (${attachments.length}).`,
           `Presentation / PDF / Document counts are grouped using file type text matching.`,
           `Displayed file size is formatted from bytes into B / KB / MB.`,
-        ],
-      };
-    case 'communication':
-      return {
-        title: 'How Communication Log Is Calculated',
-        items: [
-          `Total Entries = number of communication log rows (${communicationLog.length}).`,
-          `Recipient counters are grouped by recipientType (Employer / Learner / QA).`,
-          `Sent successfully = entries with status Sent or Delivered (${sentOrDelivered}).`,
         ],
       };
     default:
@@ -171,8 +163,6 @@ export default function McrReviewDetail() {
   }
 
   const overview = getOverviewByTab(activeTab, review);
-  const coachName = typeof review.coach === 'string' ? review.coach : review.coach.name;
-
   return (
     <div className="min-h-screen bg-[#f8f9fb]">
       {/* â”€â”€ Top Bar â”€â”€ */}
@@ -202,7 +192,7 @@ export default function McrReviewDetail() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-6 space-y-5">
+      <div className="mx-auto max-w-[1480px] px-4 py-6 sm:px-6 lg:px-8 space-y-5">
 
         {/* â”€â”€ Safeguarding Alert â”€â”€ */}
         {review.safeguardingFlagged && (
@@ -223,21 +213,21 @@ export default function McrReviewDetail() {
         <ReviewHeader review={review} />
 
         {/* â”€â”€ Action Bar â”€â”€ */}
-        <ReviewActions reviewId={review.id} coachName={coachName} />
+        <ReviewActions reviewId={review.id} />
 
         {/* â”€â”€ Tabs + Content â”€â”€ */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="overflow-hidden rounded-[28px] border border-slate-200/70 bg-white/92 shadow-[0_22px_60px_rgba(15,23,42,0.05)] backdrop-blur-sm">
           {/* Tab Bar */}
-          <div className="border-b border-gray-100 overflow-x-auto">
-            <div className="flex min-w-max">
+          <div className="overflow-x-auto border-b border-slate-200/80 bg-[linear-gradient(180deg,_rgba(255,255,255,0.98)_0%,_rgba(248,250,252,0.94)_100%)]">
+            <div className="flex w-max min-w-max mx-auto">
               {TABS.map((tab) => (
                 <button
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key)}
-                  className={`flex items-center gap-2 px-5 py-3.5 text-sm font-medium transition-all cursor-pointer whitespace-nowrap border-b-2 ${
+                  className={`flex items-center gap-2 px-5 py-4 text-sm font-medium transition-all cursor-pointer whitespace-nowrap border-b-2 ${
                     activeTab === tab.key
-                      ? 'text-indigo-600 border-indigo-500 bg-indigo-50/60'
-                      : 'text-gray-500 border-transparent hover:text-gray-800 hover:bg-gray-50'
+                      ? 'border-indigo-500 bg-indigo-50/75 text-indigo-600 shadow-[inset_0_-1px_0_rgba(99,102,241,0.05)]'
+                      : 'border-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-800'
                   }`}
                 >
                   <i className={`${tab.icon} text-base`}></i>
@@ -248,15 +238,15 @@ export default function McrReviewDetail() {
           </div>
 
           {/* Tab Content */}
-          <div className="p-6">
-            <div className="mb-5 rounded-xl border border-indigo-100 bg-indigo-50/50 px-4 py-3">
-              <div className="flex items-center gap-2 mb-2">
+          <div className="p-4 sm:p-5 lg:p-6">
+            <div className="mb-6 rounded-2xl border border-indigo-100/90 bg-[linear-gradient(180deg,_rgba(238,242,255,0.75)_0%,_rgba(247,249,255,0.95)_100%)] px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] sm:px-5">
+              <div className="mb-2 flex items-center gap-2">
                 <i className="ri-information-line text-indigo-600"></i>
                 <h4 className="text-sm font-semibold text-indigo-900">{overview.title}</h4>
               </div>
-              <ul className="space-y-1">
+              <ul className="space-y-1.5">
                 {overview.items.map((item) => (
-                  <li key={item} className="text-xs text-indigo-800">
+                  <li key={item} className="text-xs leading-5 text-indigo-800 sm:text-[13px]">
                     {item}
                   </li>
                 ))}
@@ -269,7 +259,6 @@ export default function McrReviewDetail() {
             {activeTab === 'ksb'           && <KsbEvidenceTab review={review} />}
             {activeTab === 'summary'       && <OverallSummaryTab review={review} />}
             {activeTab === 'attachments'   && <AttachmentsTab review={review} />}
-            {activeTab === 'communication' && <CommunicationLogTab review={review} />}
           </div>
         </div>
 

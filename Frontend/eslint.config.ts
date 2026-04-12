@@ -1,3 +1,8 @@
+// MCR file header: Frontend\eslint.config.ts
+// This file is part of the MCR application source.
+// Purpose: Source file for the MCR application.
+
+
 import js from '@eslint/js'
 import globals from 'globals'
 import reactHooks from 'eslint-plugin-react-hooks'
