@@ -942,6 +942,25 @@ export const deleteReviewAttachment = async (reviewId: string, attachmentId: str
   await mcrApiClient.delete(`/api/mcr/reviews/${reviewId}/attachments/${attachmentId}/`);
 };
 
+const recipientTypeToApi = (recipientType: string): 'employer' | 'learner' | 'qa_system' => {
+  const normalized = String(recipientType || '').trim().toLowerCase();
+  if (normalized === 'employer') return 'employer';
+  if (normalized === 'learner') return 'learner';
+  return 'qa_system';
+};
+
+export const addCommunicationLog = async (
+  reviewId: string,
+  data: { recipientType: string; notes: string; sentBy: string }
+): Promise<any> => {
+  const response = await mcrApiClient.post(`/api/mcr/reviews/${reviewId}/communications/`, {
+    recipient_type: recipientTypeToApi(data.recipientType),
+    notes: data.notes,
+    sent_by: data.sentBy,
+  });
+  return response.data;
+};
+
 export const exportReview = async (id: string): Promise<Blob> => {
   const response = await mcrApiClient.get(`/api/mcr/reviews/${id}/export/`, {
     responseType: 'blob',
