@@ -1,10 +1,15 @@
+// MCR file header: Frontend\src\utils\mcrApiClient.ts
+// This file is part of the MCR application source.
+// Purpose: Source file for the MCR application.
+
+
 import axios from 'axios';
 import type {
+  Attachment,
   McrReview,
   McrReviewDetail,
   PaginatedResponse,
   ReviewsFilters,
-  CommunicationLogEntry,
   FilterOptions,
   DashboardMetrics,
   DashboardFilters,
@@ -43,20 +48,20 @@ type RawOverallRating = {
   professional_judgement?: string;
 };
 
-type RawCommunication = {
-  id?: number | string;
-  recipient_type?: string;
-  sent_at?: string;
-  sent_by?: string;
-  status?: string;
-  notes?: string;
-};
-
 type RawAttachment = {
+  id?: number | string;
   name?: string;
   url?: string;
+  download_url?: string;
+  downloadUrl?: string;
   type?: string;
   size?: number;
+  uploaded_at?: string;
+  uploadedAt?: string;
+  uploaded_by?: string;
+  uploadedBy?: string;
+  visible_to_learner?: boolean;
+  visibleToLearner?: boolean;
 };
 
 type RawReview = {
@@ -79,7 +84,6 @@ type RawReview = {
   priority_actions?: Array<{ action?: string }>;
   overall_rating?: RawOverallRating;
   qa?: RawQaItem[];
-  communications?: RawCommunication[];
   attachments?: RawAttachment[];
   meeting_day_date?: string | null;
   meeting_starts_at?: string | null;
@@ -212,20 +216,6 @@ const toBinarySafeguardingStatus = (value: unknown): 'Met' | 'Not Met' => {
   return v === 'green' || v === 'met' ? 'Met' : 'Not Met';
 };
 
-const toDeliveryStatus = (value: unknown): 'Sent' | 'Pending' | 'Failed' | 'Delivered' => {
-  const v = String(value || '').trim().toLowerCase();
-  if (v === 'pending') return 'Pending';
-  if (v === 'failed') return 'Failed';
-  if (v === 'delivered') return 'Delivered';
-  return 'Sent';
-};
-
-const toRecipient = (value: unknown): 'Employer' | 'Learner' | 'QA' => {
-  const v = String(value || '').trim().toLowerCase();
-  if (v === 'employer') return 'Employer';
-  if (v === 'learner') return 'Learner';
-  return 'QA';
-};
 
 const deriveListRating = (rawRating: unknown, score: number): 'Outstanding' | 'Good' | 'Requires Improvement' | 'Inadequate' => {
   const text = String(rawRating || '').toLowerCase();
@@ -274,6 +264,23 @@ const extractEvidenceUrls = (evidence: unknown[]): string[] => {
   });
   return urls;
 };
+
+const mapAttachment = (attachment: RawAttachment): Attachment => ({
+  id: attachment.id != null ? String(attachment.id) : undefined,
+  name: String(attachment.name || 'Attachment'),
+  url: String(attachment.url || '#'),
+  downloadUrl: String(attachment.downloadUrl || attachment.download_url || attachment.url || '#'),
+  type: String(attachment.type || 'file'),
+  size: toNumber(attachment.size, 0),
+  uploadedAt: String(attachment.uploadedAt || attachment.uploaded_at || ''),
+  uploadedBy: String(attachment.uploadedBy || attachment.uploaded_by || ''),
+  visibleToLearner:
+    attachment.visibleToLearner !== undefined
+      ? Boolean(attachment.visibleToLearner)
+      : attachment.visible_to_learner !== undefined
+      ? Boolean(attachment.visible_to_learner)
+      : true,
+});
 
 const mapQaIndicators = (qaItems: RawQaItem[]) => {
   return qaItems.map((item, idx) => {
@@ -490,6 +497,26 @@ const monthLabel = (dateString: string): string => {
   return MONTHS[d.getMonth()];
 };
 
+const monthPeriodKey = (dateString: string): string => {
+  const d = new Date(dateString);
+  if (Number.isNaN(d.getTime())) return 'unknown';
+
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  return `${year}-${month}`;
+};
+
+const monthPeriodLabel = (periodKey: string, includeYear: boolean): string => {
+  const match = /^(\d{4})-(\d{2})$/.exec(periodKey);
+  if (!match) return 'Unknown';
+
+  const year = match[1];
+  const monthIndex = Number(match[2]) - 1;
+  const month = MONTHS[monthIndex] || 'Unknown';
+
+  return includeYear ? `${month} ${year}` : month;
+};
+
 const safeIsoDate = (value: string | undefined, fallback = new Date().toISOString()): string => {
   if (!value) return fallback;
   const d = new Date(value);
@@ -515,20 +542,6 @@ const avgQaScoreFromIndicators = (qaIndicators: Array<{ score0to5: number }>): n
   if (qaIndicators.length === 0) return 0;
   return qaIndicators.reduce((sum, item) => sum + item.score0to5, 0) / qaIndicators.length;
 };
-
-const mapCommunicationLog = (communications: RawCommunication[]): CommunicationLogEntry[] => {
-  return communications.map((entry, idx) => ({
-    id: String(entry.id ?? `comm-${idx + 1}`),
-    recipientType: toRecipient(entry.recipient_type),
-    sentAt: safeIsoDate(entry.sent_at),
-    sentBy: String(entry.sent_by || 'System'),
-    status: toDeliveryStatus(entry.status),
-    notes: String(entry.notes || ''),
-  }));
-};
-
-const entryCountsAsNotified = (entry: CommunicationLogEntry): boolean =>
-  entry.status === 'Sent' || entry.status === 'Delivered';
 
 const normalizeMeetingFields = (
   raw: RawReview
@@ -572,17 +585,6 @@ const mapListReview = (raw: RawReview): McrReview => {
   const qaIndicators = mapQaIndicators(qaItems);
   const qaAverage = avgQaScoreFromIndicators(qaIndicators);
   const listRating = deriveListRating(raw.qualitative_rating || raw.overall_rating?.qualitative, qaAverage);
-  const communicationLog = mapCommunicationLog(asArray<RawCommunication>(raw.communications));
-
-  const communicatedToEmployer = communicationLog.some(
-    (entry) => entry.recipientType === 'Employer' && entryCountsAsNotified(entry)
-  );
-  const communicatedToLearner = communicationLog.some(
-    (entry) => entry.recipientType === 'Learner' && entryCountsAsNotified(entry)
-  );
-  const communicatedToQA = communicationLog.some(
-    (entry) => entry.recipientType === 'QA' && entryCountsAsNotified(entry)
-  );
 
   const coachName = String(raw.coach_name || 'Unknown Coach');
   const learnerName = normalizeLearnerDisplayName(raw.learner_name);
@@ -608,14 +610,6 @@ const mapListReview = (raw: RawReview): McrReview => {
     safeguardingFlagged: Boolean(raw.safeguarding_flagged),
     satisfactionScore: clampScore(raw.satisfaction_score),
     overallQaScore: Number(qaAverage.toFixed(2)),
-    communicatedTo: {
-      employer: communicatedToEmployer,
-      learner: communicatedToLearner,
-      qa: communicatedToQA,
-    },
-    communicatedToEmployer,
-    communicatedToLearner,
-    communicatedToQA,
   } as McrReview;
 };
 
@@ -627,18 +621,7 @@ const mapDetailReview = (raw: RawReview): McrReview => {
   const detailRating = deriveDetailRating(listRating);
   const safeguardingQa = qaItems.find((item) => String(item.metric || '').toLowerCase().includes('safeguarding'));
   const satisfactionQa = qaItems.find((item) => String(item.metric || '').toLowerCase().includes('satisfaction'));
-  const communicationLog = mapCommunicationLog(asArray<RawCommunication>(raw.communications));
   const transcriptEvidence = mapTranscriptEvidence(qaItems);
-
-  const communicatedToEmployer = communicationLog.some(
-    (entry) => entry.recipientType === 'Employer' && entryCountsAsNotified(entry)
-  );
-  const communicatedToLearner = communicationLog.some(
-    (entry) => entry.recipientType === 'Learner' && entryCountsAsNotified(entry)
-  );
-  const communicatedToQA = communicationLog.some(
-    (entry) => entry.recipientType === 'QA' && entryCountsAsNotified(entry)
-  );
 
   const totalDurationMin = toNumber(raw.total_duration_min, 0);
 
@@ -683,14 +666,6 @@ const mapDetailReview = (raw: RawReview): McrReview => {
     safeguardingFlagged: Boolean(raw.safeguarding_flagged),
     satisfactionScore: clampScore(raw.satisfaction_score),
     overallQaScore: Number(qaAverage.toFixed(2)),
-    communicatedTo: {
-      employer: communicatedToEmployer,
-      learner: communicatedToLearner,
-      qa: communicatedToQA,
-    },
-    communicatedToEmployer,
-    communicatedToLearner,
-    communicatedToQA,
     meetingSections,
     qaIndicators,
     safeguardingChecklist,
@@ -703,13 +678,7 @@ const mapDetailReview = (raw: RawReview): McrReview => {
     transcriptEvidence,
     ksbEvidence: [],
     overallSummary: summary,
-    attachments: asArray<RawAttachment>(raw.attachments).map((attachment) => ({
-      name: String(attachment.name || 'Attachment'),
-      url: String(attachment.url || '#'),
-      type: String(attachment.type || 'file'),
-      size: toNumber(attachment.size, 0),
-    })),
-    communicationLog,
+    attachments: asArray<RawAttachment>(raw.attachments).map(mapAttachment),
   } as McrReview;
 
   return mapped;
@@ -811,18 +780,28 @@ const buildDashboardMetrics = (rawReviews: RawReview[], filters?: DashboardFilte
   const volumeMap = new Map<string, number>();
   const ragMap = new Map<string, { green: number; amber: number; red: number }>();
   const qaMap = new Map<string, { count: number; totals: QaTrendVector }>();
+  const periodYears = new Set<string>();
 
   filteredRaw.forEach((review) => {
-    const period = monthLabel(String(review.date || review.created_at || new Date().toISOString()));
-    volumeMap.set(period, (volumeMap.get(period) || 0) + 1);
+    const sourceDate = String(review.date || review.created_at || new Date().toISOString());
+    const periodKey = monthPeriodKey(sourceDate);
+    const periodLabel = monthLabel(sourceDate);
+
+    if (periodKey !== 'unknown') {
+      periodYears.add(periodKey.slice(0, 4));
+    } else if (periodLabel !== 'Unknown') {
+      periodYears.add(String(new Date(sourceDate).getFullYear()));
+    }
+
+    volumeMap.set(periodKey, (volumeMap.get(periodKey) || 0) + 1);
 
     const rag = normalizeRagLower(review.rag_status);
-    const ragBucket = ragMap.get(period) || { green: 0, amber: 0, red: 0 };
+    const ragBucket = ragMap.get(periodKey) || { green: 0, amber: 0, red: 0 };
     ragBucket[rag] += 1;
-    ragMap.set(period, ragBucket);
+    ragMap.set(periodKey, ragBucket);
 
     const qaVector = qaToTrendVector(asArray<RawQaItem>(review.qa));
-    const qaBucket = qaMap.get(period) || { count: 0, totals: { ...EMPTY_QA_VECTOR } };
+    const qaBucket = qaMap.get(periodKey) || { count: 0, totals: { ...EMPTY_QA_VECTOR } };
     qaBucket.count += 1;
     qaBucket.totals.duration += qaVector.duration;
     qaBucket.totals.welcomeStudent += qaVector.welcomeStudent;
@@ -832,23 +811,35 @@ const buildDashboardMetrics = (rawReviews: RawReview[], filters?: DashboardFilte
     qaBucket.totals.epaTopics += qaVector.epaTopics;
     qaBucket.totals.satisfaction += qaVector.satisfaction;
     qaBucket.totals.safeguarding += qaVector.safeguarding;
-    qaMap.set(period, qaBucket);
+    qaMap.set(periodKey, qaBucket);
   });
 
-  const monthSort = (a: string, b: string) => MONTHS.indexOf(a) - MONTHS.indexOf(b);
+  const includeYearInPeriodLabel = periodYears.size > 1;
 
-  const volumeOverTime = Array.from(volumeMap.entries())
-    .sort(([a], [b]) => monthSort(a, b))
-    .map(([period, count]) => ({ period, count }));
+  const sortedVolumeEntries = Array.from(volumeMap.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .slice(-12);
 
-  const ragOverTime = Array.from(ragMap.entries())
-    .sort(([a], [b]) => monthSort(a, b))
-    .map(([period, value]) => ({ period, ...value }));
+  const sortedRagEntries = Array.from(ragMap.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .slice(-12);
 
-  const qaIndicatorsTrends = Array.from(qaMap.entries())
-    .sort(([a], [b]) => monthSort(a, b))
-    .map(([period, value]) => ({
-      period,
+  const sortedQaEntries = Array.from(qaMap.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .slice(-12);
+
+  const volumeOverTime = sortedVolumeEntries.map(([periodKey, count]) => ({
+      period: monthPeriodLabel(periodKey, includeYearInPeriodLabel),
+      count,
+    }));
+
+  const ragOverTime = sortedRagEntries.map(([periodKey, value]) => ({
+      period: monthPeriodLabel(periodKey, includeYearInPeriodLabel),
+      ...value,
+    }));
+
+  const qaIndicatorsTrends = sortedQaEntries.map(([periodKey, value]) => ({
+      period: monthPeriodLabel(periodKey, includeYearInPeriodLabel),
       duration: Number((value.totals.duration / value.count).toFixed(1)),
       welcomeStudent: Number((value.totals.welcomeStudent / value.count).toFixed(1)),
       presentationQuality: Number((value.totals.presentationQuality / value.count).toFixed(1)),
@@ -925,6 +916,32 @@ export const getReviewById = async (id: string): Promise<McrReview> => {
   return mapDetailReview(response.data);
 };
 
+export const uploadReviewAttachment = async (
+  reviewId: string,
+  file: File,
+  options?: { uploadedBy?: string; visibleToLearner?: boolean }
+): Promise<Attachment> => {
+  const formData = new FormData();
+  formData.append('file', file);
+  if (options?.uploadedBy) {
+    formData.append('uploaded_by', options.uploadedBy);
+  }
+  if (options?.visibleToLearner !== undefined) {
+    formData.append('visible_to_learner', String(options.visibleToLearner));
+  }
+
+  const response = await mcrApiClient.post<RawAttachment>(`/api/mcr/reviews/${reviewId}/attachments/`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  return mapAttachment(response.data);
+};
+
+export const deleteReviewAttachment = async (reviewId: string, attachmentId: string): Promise<void> => {
+  await mcrApiClient.delete(`/api/mcr/reviews/${reviewId}/attachments/${attachmentId}/`);
+};
+
 export const exportReview = async (id: string): Promise<Blob> => {
   const response = await mcrApiClient.get(`/api/mcr/reviews/${id}/export/`, {
     responseType: 'blob',
@@ -942,31 +959,6 @@ export const updateReview = async (id: string, data: Partial<McrReviewDetail>) =
     }
     throw error;
   }
-};
-
-export const getCommunicationLog = async (reviewId: string): Promise<CommunicationLogEntry[]> => {
-  const detail = await getReviewById(reviewId);
-  return asArray<CommunicationLogEntry>((detail as any).communicationLog);
-};
-
-const recipientTypeToApi = (t: 'Employer' | 'Learner' | 'QA'): 'employer' | 'learner' | 'qa_system' => {
-  if (t === 'Employer') return 'employer';
-  if (t === 'Learner') return 'learner';
-  return 'qa_system';
-};
-
-export const addCommunicationLog = async (
-  reviewId: string,
-  data: { recipientType: 'Employer' | 'Learner' | 'QA'; notes: string; sentBy: string }
-): Promise<CommunicationLogEntry> => {
-  const response = await mcrApiClient.post<RawCommunication>(`/api/mcr/reviews/${reviewId}/communications/`, {
-    recipient_type: recipientTypeToApi(data.recipientType),
-    notes: data.notes,
-    sent_by: data.sentBy,
-  });
-  const [mapped] = mapCommunicationLog([response.data]);
-  if (!mapped) throw new Error('Invalid communication response');
-  return mapped;
 };
 
 export const getFilterOptions = async (): Promise<FilterOptions> => {
@@ -994,6 +986,3 @@ mcrApiClient.interceptors.response.use(
     return Promise.reject(error);
   }
 );
-
-
-

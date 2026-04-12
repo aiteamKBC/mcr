@@ -1,3 +1,8 @@
+// MCR file header: Frontend\src\pages\mcr-dashboard\page.tsx
+// This file is part of the MCR application source.
+// Purpose: Source file for the MCR application.
+
+
 
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -67,7 +72,7 @@ export default function MCRDashboardPage() {
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(79,70,229,0.12),_transparent_24%),radial-gradient(circle_at_top_right,_rgba(139,92,246,0.10),_transparent_20%),linear-gradient(180deg,_#f7f7ff_0%,_#f8fafc_42%,_#f8fafc_100%)]">
       {/* â”€â”€ Top Navigation Bar â”€â”€ */}
-      <header className="sticky top-0 z-40 border-b border-white/70 bg-white/78 shadow-[0_10px_30px_rgba(15,23,42,0.05)] backdrop-blur-xl">
+      <header className="sticky top-0 z-40 border-b border-indigo-100/80 bg-[linear-gradient(180deg,_rgba(255,255,255,0.92)_0%,_rgba(245,243,255,0.82)_100%)] shadow-[0_10px_30px_rgba(79,70,229,0.08)] backdrop-blur-xl">
         <div className="max-w-[1820px] mx-auto px-6 lg:px-8">
           <div className="flex items-center justify-between min-h-[72px] gap-4">
             {/* Brand */}
@@ -78,31 +83,37 @@ export default function MCRDashboardPage() {
                 </div>
                 <div>
                   <span className="text-base font-bold text-slate-900 tracking-tight">MCR Dashboard</span>
-                  <span className="hidden lg:inline text-xs text-slate-400 ml-2 font-normal">Monthly Coach Review Analytics</span>
+                  <span className="hidden lg:inline ml-2 text-xs font-normal text-indigo-300">Monthly Coach Review Analytics</span>
                 </div>
               </div>
               {/* Nav pills */}
-              <nav className="hidden lg:flex items-center gap-1 ml-4">
-                <span className="px-3 py-1.5 text-xs font-semibold text-indigo-700 bg-indigo-50 rounded-full border border-indigo-200 shadow-sm">Overview</span>
-                <button
-                  onClick={() => navigate('/mcr/reviews')}
-                  className="px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-800 hover:bg-white rounded-full transition-colors cursor-pointer whitespace-nowrap"
-                >
-                  Reviews
-                </button>
+              <nav className="hidden md:flex items-center ml-4">
+                <div className="flex items-center gap-2 rounded-2xl border border-indigo-100/90 bg-white/90 p-1.5 shadow-[0_14px_32px_rgba(79,70,229,0.12)] backdrop-blur-md">
+                  <span className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-500 px-4 py-2 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(79,70,229,0.28)]">
+                    <i className="ri-dashboard-horizontal-line text-base"></i>
+                    Overview
+                  </span>
+                  <button
+                    onClick={() => navigate('/mcr/reviews')}
+                    className="group inline-flex items-center gap-2 rounded-xl border border-transparent px-4 py-2 text-sm font-medium text-indigo-700 transition-all hover:-translate-y-0.5 hover:border-indigo-200 hover:bg-[linear-gradient(135deg,_rgba(238,242,255,0.98)_0%,_rgba(245,243,255,0.98)_100%)] hover:text-indigo-800 hover:shadow-[0_12px_24px_rgba(99,102,241,0.14)] cursor-pointer whitespace-nowrap"
+                  >
+                    <i className="ri-file-list-3-line text-base text-indigo-400 transition-colors group-hover:text-violet-500"></i>
+                    Reviews
+                  </button>
+                </div>
               </nav>
             </div>
 
             {/* Right actions */}
             <div className="flex items-center gap-2">
-              <span className="hidden xl:block text-xs text-slate-400 mr-2">{dateLabel}</span>
+              <span className="hidden xl:block mr-2 text-xs text-indigo-300">{dateLabel}</span>
               <div className="relative">
                 <button
                   onClick={handleFiltersToggle}
                   className={`flex items-center gap-2 px-3.5 py-2 rounded-xl border text-sm font-medium transition-all cursor-pointer whitespace-nowrap ${
                     showFiltersPanel
-                      ? 'bg-indigo-50 border-indigo-300 text-indigo-700 shadow-sm'
-                      : 'bg-white/85 border-white/80 text-slate-600 hover:border-slate-200 hover:bg-white shadow-sm'
+                      ? 'border-indigo-300 bg-[linear-gradient(135deg,_rgba(238,242,255,0.95)_0%,_rgba(245,243,255,0.95)_100%)] text-indigo-700 shadow-[0_10px_24px_rgba(99,102,241,0.14)]'
+                      : 'border-indigo-100/90 bg-white/88 text-indigo-600 hover:border-indigo-200 hover:bg-[linear-gradient(135deg,_rgba(250,250,255,0.98)_0%,_rgba(245,243,255,0.96)_100%)] hover:text-indigo-700 shadow-[0_8px_22px_rgba(79,70,229,0.08)]'
                   }`}
                 >
                   <i className="ri-equalizer-line text-base"></i>
@@ -115,21 +126,6 @@ export default function MCRDashboardPage() {
                   <i className={`ri-arrow-${showFiltersPanel ? 'up' : 'down'}-s-line text-base`}></i>
                 </button>
               </div>
-              <button
-                onClick={() => refetch()}
-                disabled={isLoading}
-                className="flex items-center gap-2 px-3.5 py-2 bg-white/85 border border-white/80 text-slate-600 hover:border-slate-200 hover:bg-white rounded-xl text-sm font-medium transition-all cursor-pointer whitespace-nowrap disabled:opacity-40 shadow-sm"
-              >
-                <i className={`ri-refresh-line text-base ${isLoading ? 'animate-spin' : ''}`}></i>
-                <span className="hidden sm:inline">Refresh</span>
-              </button>
-              <button
-                onClick={() => navigate('/mcr/reviews')}
-                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-600 to-violet-500 hover:from-indigo-700 hover:to-violet-600 text-white rounded-xl text-sm font-semibold transition-all cursor-pointer whitespace-nowrap shadow-[0_14px_30px_rgba(79,70,229,0.24)] hover:-translate-y-0.5"
-              >
-                <i className="ri-file-list-3-line text-base"></i>
-                All Reviews
-              </button>
             </div>
           </div>
         </div>

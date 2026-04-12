@@ -1,8 +1,13 @@
+// MCR file header: Frontend\src\pages\mcr-reviews\page.tsx
+// This file is part of the MCR application source.
+// Purpose: Source file for the MCR application.
+
+
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { createPortal } from 'react-dom';
 import { getReviews, getFilterOptions } from '../../utils/mcrApiClient';
-import { exportReviewsListToCsv } from '../../utils/reviewsExport';
+import { exportReviewsListToExcel } from '../../utils/reviewsExport';
 import ReviewsTable from './components/ReviewsTable';
 import ReviewsFilters from './components/ReviewsFilters';
 import type { ReviewsFilters as ReviewsFiltersType } from '../../types/mcr';
@@ -63,7 +68,7 @@ export default function McrReviews() {
     try {
       const exportPageSize = Math.max(reviewsData.total, 1);
       const { data: allRows } = await getReviews({ ...filters, page: 1, pageSize: exportPageSize });
-      exportReviewsListToCsv(allRows);
+      exportReviewsListToExcel(allRows);
     } finally {
       setIsExporting(false);
     }
@@ -72,7 +77,7 @@ export default function McrReviews() {
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(79,70,229,0.10),_transparent_24%),radial-gradient(circle_at_top_right,_rgba(139,92,246,0.08),_transparent_22%),linear-gradient(180deg,_#f7f7ff_0%,_#f8fafc_40%,_#f8fafc_100%)]">
       {/* Top Navigation Bar */}
-      <div className="sticky top-0 z-30 border-b border-white/70 bg-white/78 shadow-[0_10px_30px_rgba(15,23,42,0.05)] backdrop-blur-xl">
+      <div className="sticky top-0 z-30 border-b border-indigo-100/80 bg-[linear-gradient(180deg,_rgba(255,255,255,0.92)_0%,_rgba(245,243,255,0.82)_100%)] shadow-[0_10px_30px_rgba(79,70,229,0.08)] backdrop-blur-xl">
         <div className="max-w-[1380px] mx-auto px-6 py-4">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
@@ -81,7 +86,7 @@ export default function McrReviews() {
               </div>
               <div>
                 <h1 className="text-xl font-semibold tracking-tight text-gray-900">MCR Reviews</h1>
-                <p className="text-xs text-gray-500">Monthly Coach Review Records</p>
+                <p className="text-xs text-indigo-300">Monthly Coach Review Records</p>
               </div>
             </div>
             <div className="flex items-center gap-4">
@@ -90,8 +95,8 @@ export default function McrReviews() {
                   onClick={() => setShowFiltersPanel((prev) => !prev)}
                   className={`flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium transition-all cursor-pointer whitespace-nowrap ${
                     showFiltersPanel
-                      ? 'bg-indigo-50 border-indigo-300 text-indigo-700 shadow-sm'
-                      : 'bg-white/85 border-white/80 text-gray-700 hover:bg-white'
+                      ? 'border-indigo-300 bg-[linear-gradient(135deg,_rgba(238,242,255,0.95)_0%,_rgba(245,243,255,0.95)_100%)] text-indigo-700 shadow-[0_10px_24px_rgba(99,102,241,0.14)]'
+                      : 'border-indigo-100/90 bg-white/88 text-indigo-600 hover:border-indigo-200 hover:bg-[linear-gradient(135deg,_rgba(250,250,255,0.98)_0%,_rgba(245,243,255,0.96)_100%)] hover:text-indigo-700 shadow-[0_8px_22px_rgba(79,70,229,0.08)]'
                   }`}
                 >
                   <i className="ri-equalizer-line text-base"></i>
@@ -106,7 +111,7 @@ export default function McrReviews() {
               </div>
               <button
                 onClick={() => window.REACT_APP_NAVIGATE('/mcr/dashboard')}
-                className="rounded-xl border border-white/80 bg-white/85 px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-white cursor-pointer whitespace-nowrap"
+                className="rounded-xl border border-indigo-100/90 bg-white/88 px-4 py-2 text-sm font-medium text-indigo-600 shadow-[0_8px_22px_rgba(79,70,229,0.08)] transition-all hover:border-indigo-200 hover:bg-[linear-gradient(135deg,_rgba(250,250,255,0.98)_0%,_rgba(245,243,255,0.96)_100%)] hover:text-indigo-700 cursor-pointer whitespace-nowrap"
               >
                 <i className="ri-dashboard-line mr-2"></i>
                 Dashboard
