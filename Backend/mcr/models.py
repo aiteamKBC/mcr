@@ -1,4 +1,16 @@
+# MCR file header: Backend\mcr\models.py
+# This file is part of the MCR application source.
+# Purpose: Source file for the MCR application.
+
+
+from pathlib import Path
+
 from django.db import models
+
+
+def dashboard_review_attachment_upload_to(instance, filename: str) -> str:
+    safe_name = Path(filename or "attachment").name or "attachment"
+    return f"mcr/review-attachments/{instance.review_id}/{safe_name}"
 
 class McrReview(models.Model):
     RAG_RED = "red"
@@ -81,41 +93,20 @@ class Attachment(models.Model):
     url = models.URLField()
     type = models.CharField(max_length=80, blank=True, default="")
 
-class CommunicationLogEntry(models.Model):
-    REC_EMPLOYER = "employer"
-    REC_LEARNER = "learner"
-    REC_QA = "qa_system"
-    REC_CHOICES = [(REC_EMPLOYER, "Employer"), (REC_LEARNER, "Learner"), (REC_QA, "Quality Assurance system")]
 
-    STATUS_SENT = "sent"
-    STATUS_FAILED = "failed"
-    STATUS_PENDING = "pending"
-    STATUS_CHOICES = [(STATUS_SENT, "Sent"), (STATUS_FAILED, "Failed"), (STATUS_PENDING, "Pending")]
-
-    review = models.ForeignKey(McrReview, on_delete=models.CASCADE, related_name="communications")
-    recipient_type = models.CharField(max_length=20, choices=REC_CHOICES)
-    sent_at = models.DateTimeField()
-    sent_by = models.CharField(max_length=200, blank=True, default="")
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_SENT)
-    notes = models.TextField(blank=True, default="")
-
-
-class DashboardReviewCommunication(models.Model):
-    """
-    Communication log rows keyed by dashboard review id (booking_summaries.id),
-    used by the live API while review bodies are read from external SQL tables.
-    """
-
-    review_id = models.PositiveIntegerField(db_index=True)
-    recipient_type = models.CharField(max_length=20, choices=CommunicationLogEntry.REC_CHOICES)
-    sent_at = models.DateTimeField(auto_now_add=True)
-    sent_by = models.CharField(max_length=200, blank=True, default="")
-    status = models.CharField(
-        max_length=20,
-        choices=CommunicationLogEntry.STATUS_CHOICES,
-        default=CommunicationLogEntry.STATUS_SENT,
-    )
-    notes = models.TextField(blank=True, default="")
+class DashboardReviewAttachment(models.Model):
+    review_id = models.BigIntegerField(db_index=True)
+    file = models.FileField(upload_to=dashboard_review_attachment_upload_to, max_length=500)
+    original_name = models.CharField(max_length=255)
+    content_type = models.CharField(max_length=120, blank=True, default="")
+    size = models.PositiveBigIntegerField(default=0)
+    uploaded_by = models.CharField(max_length=200, blank=True, default="")
+    visible_to_learner = models.BooleanField(default=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ["-sent_at"]
+        ordering = ["-uploaded_at", "-id"]
+
+    def __str__(self) -> str:
+        return f"{self.original_name} ({self.review_id})"

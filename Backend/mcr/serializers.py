@@ -1,7 +1,12 @@
+# MCR file header: Backend\mcr\serializers.py
+# This file is part of the MCR application source.
+# Purpose: Source file for the MCR application.
+
+
 from rest_framework import serializers
 from .models import (
     McrReview, MeetingSectionTiming, QaIndicatorEvaluation,
-    SafeguardingChecklistItem, EvidenceItem, Attachment, CommunicationLogEntry,
+    SafeguardingChecklistItem, EvidenceItem, Attachment, DashboardReviewAttachment,
 )
 
 
@@ -35,16 +40,43 @@ class AttachmentSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class CommunicationLogEntrySerializer(serializers.ModelSerializer):
+class DashboardReviewAttachmentSerializer(serializers.ModelSerializer):
+    reviewId = serializers.IntegerField(source="review_id", read_only=True)
+    name = serializers.CharField(source="original_name", read_only=True)
+    url = serializers.SerializerMethodField()
+    downloadUrl = serializers.SerializerMethodField()
+    type = serializers.CharField(source="content_type", read_only=True)
+    size = serializers.IntegerField(read_only=True)
+    uploadedAt = serializers.DateTimeField(source="uploaded_at", read_only=True)
+    uploadedBy = serializers.CharField(source="uploaded_by", read_only=True)
+    visibleToLearner = serializers.BooleanField(source="visible_to_learner", read_only=True)
+
     class Meta:
-        model = CommunicationLogEntry
-        fields = "__all__"
+        model = DashboardReviewAttachment
+        fields = [
+            "id",
+            "reviewId",
+            "name",
+            "url",
+            "downloadUrl",
+            "type",
+            "size",
+            "uploadedAt",
+            "uploadedBy",
+            "visibleToLearner",
+        ]
+
+    def get_url(self, obj) -> str:
+        return f"/api/mcr/reviews/{obj.review_id}/attachments/{obj.id}/file/"
+
+    def get_downloadUrl(self, obj) -> str:
+        return f"/api/mcr/reviews/{obj.review_id}/attachments/{obj.id}/download/"
 
 
-class CommunicationLogEntryCreateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CommunicationLogEntry
-        fields = ["recipient_type", "sent_at", "sent_by", "status", "notes"]
+class DashboardReviewAttachmentUploadSerializer(serializers.Serializer):
+    file = serializers.FileField()
+    uploaded_by = serializers.CharField(required=False, allow_blank=True, max_length=200)
+    visible_to_learner = serializers.BooleanField(required=False, default=True)
 
 
 class McrReviewListSerializer(serializers.ModelSerializer):
@@ -73,7 +105,6 @@ class McrReviewDetailSerializer(serializers.ModelSerializer):
     safeguarding_items = SafeguardingChecklistItemSerializer(many=True, read_only=True)
     evidence_items = EvidenceItemSerializer(many=True, read_only=True)
     attachments = AttachmentSerializer(many=True, read_only=True)
-    communications = CommunicationLogEntrySerializer(many=True, read_only=True)
 
     class Meta:
         model = McrReview
@@ -95,17 +126,8 @@ class DashboardMcrReviewListSerializer(serializers.Serializer):
     updated_at = serializers.DateTimeField(allow_null=True, required=False)
     safeguarding_flagged = serializers.BooleanField(default=False)
     satisfaction_score = serializers.IntegerField(allow_null=True, required=False)
-    communications = serializers.ListField(
-        child=serializers.DictField(), required=False, default=list
-    )
     meeting_day_date = serializers.CharField(allow_blank=True, allow_null=True, required=False)
     meeting_starts_at = serializers.CharField(allow_blank=True, allow_null=True, required=False)
-
-
-class DashboardReviewCommunicationCreateSerializer(serializers.Serializer):
-    recipient_type = serializers.ChoiceField(choices=CommunicationLogEntry.REC_CHOICES)
-    notes = serializers.CharField(allow_blank=True, default="")
-    sent_by = serializers.CharField(allow_blank=True, default="")
 
 
 class DashboardMcrReviewDetailSerializer(DashboardMcrReviewListSerializer):
@@ -114,6 +136,7 @@ class DashboardMcrReviewDetailSerializer(DashboardMcrReviewListSerializer):
     priority_actions = serializers.JSONField(default=list)
     overall_rating = serializers.JSONField(default=dict)
     qa = serializers.JSONField(default=list)
+    attachments = serializers.JSONField(default=list)
     booking_id = serializers.CharField(allow_blank=True, allow_null=True, required=False)
     status = serializers.CharField(allow_blank=True, required=False)
     summary_text_raw = serializers.CharField(allow_blank=True, default="")
