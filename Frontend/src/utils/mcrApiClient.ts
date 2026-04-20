@@ -6,6 +6,7 @@
 import axios from 'axios';
 import type {
   Attachment,
+  CoachSessionStat,
   McrReview,
   McrReviewDetail,
   PaginatedResponse,
@@ -13,6 +14,7 @@ import type {
   FilterOptions,
   DashboardMetrics,
   DashboardFilters,
+  DashboardSessionStats,
   TranscriptEvidenceItem,
 } from '../types/mcr';
 
@@ -66,6 +68,7 @@ type RawAttachment = {
 
 type RawReview = {
   id: number | string;
+  booking_id?: string | number | null;
   date?: string;
   programme?: string;
   group?: string;
@@ -87,6 +90,22 @@ type RawReview = {
   attachments?: RawAttachment[];
   meeting_day_date?: string | null;
   meeting_starts_at?: string | null;
+};
+
+type RawCoachSessionStat = {
+  coach_name?: string;
+  session_count?: number | string;
+  total_duration_seconds?: number | string;
+  avg_minutes?: number | string;
+  missing_transcript_sessions?: number | string;
+};
+
+type RawDashboardSessionStats = {
+  total_sessions?: number | string;
+  total_duration_seconds?: number | string;
+  overall_avg_minutes?: number | string;
+  sessions_without_transcript?: number | string;
+  coach_stats?: RawCoachSessionStat[];
 };
 
 type QaTrendVector = {
@@ -147,6 +166,8 @@ const toSlug = (value: string): string =>
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '') || 'unknown';
+
+const coachNameToId = (name: string): string => `coach-${toSlug(name)}`;
 
 const toEntity = (prefix: string, name: string) => ({
   id: `${prefix}-${toSlug(name)}`,
@@ -868,6 +889,8 @@ const buildDashboardMetrics = (rawReviews: RawReview[], filters?: DashboardFilte
       averageQaScore: Number(averageQaScore.toFixed(2)),
       safeguardingCompletionRate,
       averageSatisfaction: Number(averageSatisfaction.toFixed(2)),
+      overallAvgMcrMinutes: 0,
+      sessionsWithoutTranscript: 0,
     },
     charts: {
       volumeOverTime,
@@ -875,7 +898,81 @@ const buildDashboardMetrics = (rawReviews: RawReview[], filters?: DashboardFilte
       qaIndicatorsTrends,
     },
     recentActivity,
+    sessionStats: {
+      totalSessions: 0,
+      totalDurationSeconds: 0,
+      overallAvgMinutes: 0,
+      sessionsWithoutTranscript: 0,
+      coachStats: [],
+    },
   };
+};
+
+const getFilteredRawReviews = (rawReviews: RawReview[], filters?: DashboardFilters): RawReview[] => {
+  const mappedList = rawReviews.map(mapListReview);
+  const filtered = filterMappedReviews(mappedList, toDashboardFiltersAsReviewFilters(filters));
+  const filteredIdSet = new Set(filtered.map((review) => String(review.id)));
+  return rawReviews.filter((review) => filteredIdSet.has(String(review.id)));
+};
+
+const mapCoachSessionStat = (raw: RawCoachSessionStat): CoachSessionStat => ({
+  coachName: String(raw.coach_name || 'Unknown Coach'),
+  sessionCount: toNumber(raw.session_count, 0),
+  totalDurationSeconds: toNumber(raw.total_duration_seconds, 0),
+  avgMinutes: Number(toNumber(raw.avg_minutes, 0).toFixed(2)),
+  missingTranscriptSessions: toNumber(raw.missing_transcript_sessions, 0),
+});
+
+const filterSessionStats = (sessionStats: DashboardSessionStats, filters?: DashboardFilters): DashboardSessionStats => {
+  const coachStats = sessionStats.coachStats.filter((row) => {
+    if (filters?.coachId && coachNameToId(row.coachName) !== filters.coachId) {
+      return false;
+    }
+    return true;
+  });
+
+  const totalSessions = coachStats.reduce((sum, row) => sum + row.sessionCount, 0);
+  const totalDurationSeconds = coachStats.reduce((sum, row) => sum + row.totalDurationSeconds, 0);
+  const sessionsWithoutTranscript = coachStats.reduce((sum, row) => sum + row.missingTranscriptSessions, 0);
+  const overallAvgMinutes = totalSessions > 0 ? totalDurationSeconds / 60 / totalSessions : 0;
+
+  return {
+    totalSessions,
+    totalDurationSeconds,
+    overallAvgMinutes: Number(overallAvgMinutes.toFixed(2)),
+    sessionsWithoutTranscript,
+    coachStats,
+  };
+};
+
+const mapDashboardSessionStats = (
+  raw: RawDashboardSessionStats,
+  filters?: DashboardFilters
+): DashboardSessionStats => {
+  const base: DashboardSessionStats = {
+    totalSessions: toNumber(raw.total_sessions, 0),
+    totalDurationSeconds: toNumber(raw.total_duration_seconds, 0),
+    overallAvgMinutes: Number(toNumber(raw.overall_avg_minutes, 0).toFixed(2)),
+    sessionsWithoutTranscript: toNumber(raw.sessions_without_transcript, 0),
+    coachStats: asArray<RawCoachSessionStat>(raw.coach_stats).map(mapCoachSessionStat),
+  };
+
+  return filterSessionStats(base, filters);
+};
+
+const fetchDashboardSessionStats = async (
+  filteredRawReviews: RawReview[],
+  filters?: DashboardFilters
+): Promise<DashboardSessionStats> => {
+  const bookingIds = filteredRawReviews
+    .map((review) => String(review.booking_id || '').trim())
+    .filter(Boolean);
+  const response = await mcrApiClient.post<RawDashboardSessionStats>('/api/mcr/dashboard/session-stats/', {
+    date_from: filters?.dateFrom,
+    date_to: filters?.dateTo,
+    booking_ids: bookingIds,
+  });
+  return mapDashboardSessionStats(response.data, filters);
 };
 
 const fetchRawReviews = async (): Promise<RawReview[]> => {
@@ -888,7 +985,13 @@ const fetchRawReviews = async (): Promise<RawReview[]> => {
 
 export async function getDashboardMetrics(filters?: DashboardFilters): Promise<DashboardMetrics> {
   const rawReviews = await fetchRawReviews();
-  return buildDashboardMetrics(rawReviews, filters);
+  const filteredRawReviews = getFilteredRawReviews(rawReviews, filters);
+  const sessionStats = await fetchDashboardSessionStats(filteredRawReviews, filters);
+  const metrics = buildDashboardMetrics(rawReviews, filters);
+  metrics.kpis.overallAvgMcrMinutes = sessionStats.overallAvgMinutes;
+  metrics.kpis.sessionsWithoutTranscript = sessionStats.sessionsWithoutTranscript;
+  metrics.sessionStats = sessionStats;
+  return metrics;
 }
 
 export const getReviews = async (filters?: ReviewsFilters): Promise<PaginatedResponse<McrReview>> => {

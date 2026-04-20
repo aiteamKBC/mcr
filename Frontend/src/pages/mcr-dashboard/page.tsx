@@ -16,6 +16,7 @@ import DailyVolumeBarChart from './components/DailyVolumeBarChart';
 import QaIndicatorsTrendChart from './components/QaIndicatorsTrendChart';
 import RecentActivityList from './components/RecentActivityList';
 import FiltersPanel from './components/FiltersPanel';
+import SessionInsightsPanel from './components/SessionInsightsPanel';
 
 export default function MCRDashboardPage() {
   const navigate = useNavigate();
@@ -157,6 +158,8 @@ export default function MCRDashboardPage() {
 
         {/* KPI Cards */}
         <KpiCards kpis={dashboardData?.kpis} isLoading={isLoading} />
+
+        <SessionInsightsPanel sessionStats={dashboardData?.sessionStats} isLoading={isLoading} />
 
         {/* Charts Row â€” RAG donut (narrow) + Volume bar (wide) */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-6">

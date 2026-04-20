@@ -159,3 +159,19 @@ class BookingSessionSerializer(serializers.Serializer):
     staff_emails = serializers.CharField(allow_blank=True, allow_null=True, required=False)
     created_at = serializers.DateTimeField(allow_null=True, required=False)
     updated_at = serializers.DateTimeField(allow_null=True, required=False)
+
+
+class DashboardCoachSessionStatSerializer(serializers.Serializer):
+    coach_name = serializers.CharField()
+    session_count = serializers.IntegerField()
+    total_duration_seconds = serializers.IntegerField()
+    avg_minutes = serializers.FloatField()
+    missing_transcript_sessions = serializers.IntegerField()
+
+
+class DashboardSessionStatsSerializer(serializers.Serializer):
+    total_sessions = serializers.IntegerField()
+    total_duration_seconds = serializers.IntegerField()
+    overall_avg_minutes = serializers.FloatField()
+    sessions_without_transcript = serializers.IntegerField()
+    coach_stats = DashboardCoachSessionStatSerializer(many=True)

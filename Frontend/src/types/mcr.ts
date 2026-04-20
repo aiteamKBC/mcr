@@ -168,6 +168,24 @@ export interface DashboardKpis {
   averageQaScore: number;
   safeguardingCompletionRate: number;
   averageSatisfaction: number;
+  overallAvgMcrMinutes: number;
+  sessionsWithoutTranscript: number;
+}
+
+export interface CoachSessionStat {
+  coachName: string;
+  sessionCount: number;
+  totalDurationSeconds: number;
+  avgMinutes: number;
+  missingTranscriptSessions: number;
+}
+
+export interface DashboardSessionStats {
+  totalSessions: number;
+  totalDurationSeconds: number;
+  overallAvgMinutes: number;
+  sessionsWithoutTranscript: number;
+  coachStats: CoachSessionStat[];
 }
 
 export interface DashboardCharts {
@@ -207,6 +225,7 @@ export interface DashboardMetrics {
   kpis: DashboardKpis;
   charts: DashboardCharts;
   recentActivity: RecentActivity[];
+  sessionStats: DashboardSessionStats;
 }
 
 export interface FilterOptions {
@@ -228,6 +247,7 @@ export interface DashboardMetricsResponse {
   kpis: DashboardKpis;
   charts: DashboardCharts;
   recentActivity: RecentActivity[];
+  sessionStats: DashboardSessionStats;
 }
 
 // Reviews List Filters

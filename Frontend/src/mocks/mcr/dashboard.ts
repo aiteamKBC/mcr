@@ -16,6 +16,8 @@ export const mockDashboardData: DashboardMetrics = {
     averageQaScore: 4.2,
     safeguardingCompletionRate: 94,
     averageSatisfaction: 4.5,
+    overallAvgMcrMinutes: 50.6,
+    sessionsWithoutTranscript: 271,
   },
   charts: {
     volumeOverTime: [
@@ -182,4 +184,33 @@ export const mockDashboardData: DashboardMetrics = {
       updatedAt: '2024-01-12T11:45:00Z',
     },
   ],
+  sessionStats: {
+    totalSessions: 271,
+    totalDurationSeconds: 780660,
+    overallAvgMinutes: 50.63,
+    sessionsWithoutTranscript: 271,
+    coachStats: [
+      {
+        coachName: 'Femi Falodun',
+        sessionCount: 39,
+        totalDurationSeconds: 114624,
+        avgMinutes: 48.98,
+        missingTranscriptSessions: 39,
+      },
+      {
+        coachName: 'Med Maher',
+        sessionCount: 35,
+        totalDurationSeconds: 92848,
+        avgMinutes: 44.21,
+        missingTranscriptSessions: 35,
+      },
+      {
+        coachName: 'Omar Badr',
+        sessionCount: 28,
+        totalDurationSeconds: 76784,
+        avgMinutes: 45.7,
+        missingTranscriptSessions: 28,
+      },
+    ],
+  },
 };

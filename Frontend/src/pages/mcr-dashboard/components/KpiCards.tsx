@@ -68,6 +68,28 @@ const cards = [
     iconBg: 'bg-violet-500',
     textColor: 'text-violet-600',
   },
+  {
+    key: 'overallAvgMcrMinutes',
+    label: 'Overall Avg Time',
+    sub: 'Across all sessions',
+    icon: 'ri-timer-line',
+    accent: '#f59e0b',
+    bg: 'from-amber-50 to-white',
+    border: 'border-amber-100',
+    iconBg: 'bg-amber-500',
+    textColor: 'text-amber-600',
+  },
+  {
+    key: 'sessionsWithoutTranscript',
+    label: 'No Transcript',
+    sub: 'Sessions missing transcript',
+    icon: 'ri-file-warning-line',
+    accent: '#ef4444',
+    bg: 'from-red-50 to-white',
+    border: 'border-red-100',
+    iconBg: 'bg-red-500',
+    textColor: 'text-red-600',
+  },
 ] as const;
 
 export default function KpiCards({ kpis, isLoading }: KpiCardsProps) {
@@ -76,8 +98,8 @@ export default function KpiCards({ kpis, isLoading }: KpiCardsProps) {
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5 mb-6">
-        {[...Array(5)].map((_, i) => (
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-7 gap-5 mb-6">
+        {[...Array(cards.length)].map((_, i) => (
           <div key={i} className="bg-white/85 rounded-[24px] border border-white/80 p-6 shadow-[0_12px_30px_rgba(15,23,42,0.04)] animate-pulse">
             <div className="flex items-center justify-between mb-4">
               <div className="w-9 h-9 bg-slate-100 rounded-lg"></div>
@@ -119,13 +141,17 @@ export default function KpiCards({ kpis, isLoading }: KpiCardsProps) {
         };
       case 'averageSatisfaction':
         return { value: satisfactionScoreDisplayed, decimals: 1, suffix: '/5.0', badgeValue: satisfactionPct, badgeSuffix: '%' };
+      case 'overallAvgMcrMinutes':
+        return { value: Number(kpis.overallAvgMcrMinutes.toFixed(1)), decimals: 1, suffix: 'min', badgeValue: null, badgeSuffix: '' };
+      case 'sessionsWithoutTranscript':
+        return { value: kpis.sessionsWithoutTranscript, decimals: 0, suffix: '', badgeValue: null, badgeSuffix: '' };
       default:
         return { value: 0, decimals: 0, suffix: '', badgeValue: null, badgeSuffix: '' };
     }
   };
 
   return (
-    <div ref={ref} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5 mb-6">
+    <div ref={ref} className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-7 gap-5 mb-6">
         {cards.map((card, index) => {
         const { value, decimals, suffix, badgeValue, badgeSuffix } = getValue(card.key);
         const isPercent = card.key === 'safeguardingCompletionRate';

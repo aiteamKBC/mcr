@@ -150,3 +150,68 @@ class DashboardReviewAttachmentApiTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data["attachments"]), 1)
         self.assertEqual(response.data["attachments"][0]["name"], "notes.docx")
+
+
+class DashboardSessionStatsApiTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+
+    def test_dashboard_session_stats_endpoint_returns_aggregates(self):
+        payload = {
+            "total_sessions": 271,
+            "total_duration_seconds": 780660,
+            "overall_avg_minutes": 50.63,
+            "sessions_without_transcript": 271,
+            "coach_stats": [
+                {
+                    "coach_name": "Femi Falodun",
+                    "session_count": 39,
+                    "total_duration_seconds": 114624,
+                    "avg_minutes": 48.98,
+                    "missing_transcript_sessions": 39,
+                }
+            ],
+        }
+
+        with patch.object(McrReviewViewSet, "_build_dashboard_session_stats", return_value=payload) as stats_mock:
+            response = self.client.get(
+                "/api/mcr/dashboard/session-stats/?date_from=2026-04-01&date_to=2026-04-30&booking_id=abc&booking_id=def"
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["total_sessions"], 271)
+        self.assertEqual(response.data["sessions_without_transcript"], 271)
+        self.assertEqual(response.data["coach_stats"][0]["coach_name"], "Femi Falodun")
+        stats_mock.assert_called_once_with(
+            date_from="2026-04-01",
+            date_to="2026-04-30",
+            booking_ids=["abc", "def"],
+        )
+
+    def test_dashboard_session_stats_endpoint_accepts_post_body(self):
+        payload = {
+            "total_sessions": 2,
+            "total_duration_seconds": 5400,
+            "overall_avg_minutes": 45.0,
+            "sessions_without_transcript": 1,
+            "coach_stats": [],
+        }
+
+        with patch.object(McrReviewViewSet, "_build_dashboard_session_stats", return_value=payload) as stats_mock:
+            response = self.client.post(
+                "/api/mcr/dashboard/session-stats/",
+                {
+                    "date_from": "2026-04-01",
+                    "date_to": "2026-04-30",
+                    "booking_ids": ["abc", "def"],
+                },
+                format="json",
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["total_sessions"], 2)
+        stats_mock.assert_called_once_with(
+            date_from="2026-04-01",
+            date_to="2026-04-30",
+            booking_ids=["abc", "def"],
+        )

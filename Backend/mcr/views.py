@@ -31,6 +31,7 @@ from drf_spectacular.utils import OpenApiParameter, extend_schema
 from .models import DashboardReviewAttachment
 from .serializers import (
     BookingSessionSerializer,
+    DashboardSessionStatsSerializer,
     DashboardReviewAttachmentSerializer,
     DashboardReviewAttachmentUploadSerializer,
     DashboardMcrReviewDetailSerializer,
@@ -43,14 +44,13 @@ logger = logging.getLogger(__name__)
 class McrReviewViewSet(viewsets.ViewSet):
     DISPLAY_CUTOFF_DATE = None
     SUMMARY_TABLE_CANDIDATES = (
-        "booking_summaries",
         "MCM_booking_summaries",
-        "PR_BOOKING_SUMMERIES",
     )
     SESSION_TABLE_CANDIDATES = (
         "booking_sessions",
-        "MCM_booking_sessions",
-        "PR_BOOKING_SESSIONS",
+    )
+    TRANSCRIPT_TABLE_CANDIDATES = (
+        "booking_transcripts",
     )
     def _table_name_set(self):
         if not hasattr(self, "_cached_table_names"):
@@ -341,6 +341,197 @@ class McrReviewViewSet(viewsets.ViewSet):
             if k and k not in best:
                 best[k] = r
         return best
+
+    def _summary_has_transcript_evidence(self, row: dict) -> bool:
+        summary_text_payload = self._parse_summary(row.get("summary_text"))
+        summary_json_payload = self._parse_summary(row.get("summary_json"))
+        summary = summary_text_payload or summary_json_payload
+        if not isinstance(summary, dict):
+            return False
+
+        qa_items = summary.get("qa")
+        if not isinstance(qa_items, list):
+            qa_items = []
+
+        for item in qa_items:
+            if not isinstance(item, dict):
+                continue
+            evidence_items = item.get("evidence")
+            if not isinstance(evidence_items, list):
+                continue
+            for evidence in evidence_items:
+                if isinstance(evidence, str) and evidence.strip():
+                    return True
+                if isinstance(evidence, dict):
+                    for key in ("quote", "text", "timecode", "timestamp"):
+                        if str(evidence.get(key) or "").strip():
+                            return True
+
+        executive_summary = self._clean_string(summary.get("executive_summary"))
+        summary_text_raw = self._clean_string(row.get("summary_text"))
+        summary_blob = f"{executive_summary}\n{summary_text_raw}".lower()
+        if "no transcript content found" in summary_blob:
+            return False
+        if "analysis impossible" in summary_blob and "transcript" in summary_blob:
+            return False
+
+        return False
+
+    def _summary_transcript_flags_by_booking_id(self, booking_ids: list[str] | None = None) -> dict[str, int]:
+        summary_table_name = self._resolve_table_name(self.SUMMARY_TABLE_CANDIDATES)
+        if not summary_table_name:
+            return {}
+
+        normalized_booking_ids: list[str] = []
+        seen: set[str] = set()
+        for booking_id in booking_ids or []:
+            key = self._clean_string(booking_id)
+            if key and key not in seen:
+                seen.add(key)
+                normalized_booking_ids.append(key)
+        if not normalized_booking_ids:
+            return {}
+
+        summary_table = connection.ops.quote_name(summary_table_name)
+        placeholders = ",".join(["%s"] * len(normalized_booking_ids))
+        with connection.cursor() as cursor:
+            cursor.execute(
+                f"""
+                SELECT booking_id, summary_json, summary_text
+                FROM {summary_table}
+                WHERE booking_id IN ({placeholders})
+                """,
+                normalized_booking_ids,
+            )
+            rows = self._dictfetchall(cursor)
+
+        out: dict[str, int] = {}
+        for row in rows:
+            key = self._clean_string(row.get("booking_id"))
+            if not key or key in out:
+                continue
+            out[key] = 0 if self._summary_has_transcript_evidence(row) else 1
+        return out
+
+    def _summary_duration_seconds(self, row: dict) -> int:
+        summary_text_payload = self._parse_summary(row.get("summary_text"))
+        summary_json_payload = self._parse_summary(row.get("summary_json"))
+        summary = summary_text_payload or summary_json_payload
+        if not isinstance(summary, dict):
+            return 0
+
+        inferred_minutes = summary.get("duration_inferred_minutes")
+        try:
+            inferred_value = float(inferred_minutes)
+        except (TypeError, ValueError):
+            inferred_value = None
+        if inferred_value is not None and inferred_value > 0:
+            return int(round(inferred_value * 60))
+
+        duration_text = self._clean_string(summary.get("duration"))
+        if duration_text and duration_text.count(":") == 2:
+            try:
+                hours, minutes, seconds = [int(part) for part in duration_text.split(":")]
+                return max(0, hours * 3600 + minutes * 60 + seconds)
+            except (TypeError, ValueError):
+                return 0
+        return 0
+
+    def _build_dashboard_session_stats(self, date_from: str = "", date_to: str = "", booking_ids: list[str] | None = None) -> dict:
+        summary_table_name = self._resolve_table_name(self.SUMMARY_TABLE_CANDIDATES)
+        if not summary_table_name:
+            return {
+                "total_sessions": 0,
+                "total_duration_seconds": 0,
+                "overall_avg_minutes": 0.0,
+                "sessions_without_transcript": 0,
+                "coach_stats": [],
+            }
+        rows = [
+            row
+            for row in self._fetch_all_rows()
+            if self._review_visible_from_row(row)
+        ]
+
+        normalized_booking_ids = {
+            self._clean_string(booking_id)
+            for booking_id in (booking_ids or [])
+            if self._clean_string(booking_id)
+        }
+
+        filtered_rows = []
+        for row in rows:
+            booking_id = self._clean_string(row.get("booking_id"))
+            if normalized_booking_ids and booking_id not in normalized_booking_ids:
+                continue
+
+            summary_text_payload = self._parse_summary(row.get("summary_text"))
+            summary_json_payload = self._parse_summary(row.get("summary_json"))
+            summary = summary_text_payload or summary_json_payload
+            if not isinstance(summary, dict):
+                continue
+
+            summary_date = self._clean_string(summary.get("date"))
+            if date_from and summary_date and summary_date < date_from:
+                continue
+            if date_to and summary_date and summary_date > date_to:
+                continue
+            filtered_rows.append(row)
+
+        coach_totals: dict[str, dict[str, int]] = {}
+        total_sessions = 0
+        total_duration_seconds = 0
+        sessions_without_transcript = 0
+
+        for row in filtered_rows:
+            summary_text_payload = self._parse_summary(row.get("summary_text"))
+            summary_json_payload = self._parse_summary(row.get("summary_json"))
+            summary = summary_text_payload or summary_json_payload
+            coach_name = self._clean_string(summary.get("coach") if isinstance(summary, dict) else "") or "Unknown Coach"
+            duration_seconds = self._summary_duration_seconds(row)
+            missing_transcript = 0 if self._summary_has_transcript_evidence(row) else 1
+
+            bucket = coach_totals.setdefault(
+                coach_name,
+                {
+                    "session_count": 0,
+                    "total_duration_seconds": 0,
+                    "missing_transcript_sessions": 0,
+                },
+            )
+            bucket["session_count"] += 1
+            bucket["total_duration_seconds"] += duration_seconds
+            bucket["missing_transcript_sessions"] += missing_transcript
+
+            total_sessions += 1
+            total_duration_seconds += duration_seconds
+            sessions_without_transcript += missing_transcript
+
+        coach_rows = []
+        for coach_name, bucket in coach_totals.items():
+            session_count = bucket["session_count"]
+            total_seconds = bucket["total_duration_seconds"]
+            avg_minutes = round((total_seconds / 60.0 / session_count), 2) if session_count > 0 else 0.0
+            coach_rows.append(
+                {
+                    "coach_name": coach_name,
+                    "session_count": session_count,
+                    "total_duration_seconds": total_seconds,
+                    "avg_minutes": avg_minutes,
+                    "missing_transcript_sessions": bucket["missing_transcript_sessions"],
+                }
+            )
+        coach_rows.sort(key=lambda row: (-row["avg_minutes"], -row["session_count"], row["coach_name"]))
+
+        overall_avg_minutes = round((total_duration_seconds / 60.0 / total_sessions), 2) if total_sessions > 0 else 0.0
+
+        return {
+            "total_sessions": total_sessions,
+            "total_duration_seconds": total_duration_seconds,
+            "overall_avg_minutes": overall_avg_minutes,
+            "sessions_without_transcript": sessions_without_transcript,
+            "coach_stats": coach_rows,
+        }
 
     def _enrich_meeting_schedule_bulk(self, mapped_rows: list) -> None:
         booking_keys = []
@@ -1161,6 +1352,31 @@ class McrReviewViewSet(viewsets.ViewSet):
         row = self._get_row_or_404(pk)
         sessions = self._fetch_sessions_by_booking_id(row.get("booking_id"))
         serializer = BookingSessionSerializer(instance=sessions, many=True)
+        return Response(serializer.data)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(name="date_from", location=OpenApiParameter.QUERY, type=OpenApiTypes.DATE),
+            OpenApiParameter(name="date_to", location=OpenApiParameter.QUERY, type=OpenApiTypes.DATE),
+            OpenApiParameter(name="booking_id", location=OpenApiParameter.QUERY, type=OpenApiTypes.STR, many=True),
+        ],
+        responses=DashboardSessionStatsSerializer,
+    )
+    def dashboard_session_stats(self, request):
+        data_source = request.data if request.method.lower() == "post" else request.query_params
+        booking_ids = (
+            data_source.getlist("booking_id")
+            if hasattr(data_source, "getlist")
+            else data_source.get("booking_ids") or data_source.get("booking_id") or []
+        )
+        if isinstance(booking_ids, str):
+            booking_ids = [booking_ids]
+        payload = self._build_dashboard_session_stats(
+            date_from=self._clean_string(data_source.get("date_from")),
+            date_to=self._clean_string(data_source.get("date_to")),
+            booking_ids=list(booking_ids),
+        )
+        serializer = DashboardSessionStatsSerializer(instance=payload)
         return Response(serializer.data)
     def communications(self, request, pk=None):
         raise Http404
