@@ -112,7 +112,7 @@ function SectionBlock({
 }) {
   return (
     <section
-      className={`report-section ${printBreakCandidate ? 'print-break-candidate' : ''} overflow-hidden rounded-[22px] border border-slate-200 bg-white ${keepTogether ? 'report-section-keep' : ''} ${className}`}
+      className={`report-section ${printBreakCandidate ? 'print-break-candidate' : ''} self-start overflow-hidden rounded-[22px] border border-slate-200 bg-white ${keepTogether ? 'report-section-keep' : ''} ${className}`}
       data-print-start-threshold={printStartThreshold}
     >
       <div className="border-b border-slate-200 bg-slate-50 px-5 py-4">
@@ -228,6 +228,14 @@ export default function McrReviewPrint() {
     areasForDevelopment: [],
     professionalJudgement: '',
   };
+  const executiveSummaryText = textOrDash(summary.executiveSummary, '').trim();
+  const professionalJudgementText = textOrDash(summary.professionalJudgement, '').trim();
+  const strengths = Array.isArray(summary.strengths)
+    ? summary.strengths.map((item) => textOrDash(item, '').trim()).filter(Boolean)
+    : [];
+  const areasForDevelopment = Array.isArray(summary.areasForDevelopment)
+    ? summary.areasForDevelopment.map((item) => textOrDash(item, '').trim()).filter(Boolean)
+    : [];
 
   const ragLabel = textOrDash(review.ragStatus);
   const qualitativeLabel = textOrDash(summary.overallRating || review.qualitativeRating);
@@ -326,6 +334,86 @@ export default function McrReviewPrint() {
           .report-sheet {
             margin: 0 auto;
             width: 100%;
+            border: 0;
+            border-radius: 0;
+            box-shadow: none;
+          }
+          .report-shell {
+            padding: 12px 14px !important;
+            font-size: 11px !important;
+            line-height: 1.35 !important;
+          }
+          .report-header {
+            border-radius: 16px !important;
+          }
+          .report-header-inner {
+            gap: 12px !important;
+            padding: 14px 16px !important;
+          }
+          .report-logo {
+            padding: 8px 10px !important;
+          }
+          .report-logo img {
+            height: 56px !important;
+          }
+          .report-details-grid,
+          .report-metrics-grid {
+            gap: 8px !important;
+            margin-top: 12px !important;
+          }
+          .report-card,
+          .report-metric {
+            border-radius: 14px !important;
+            padding: 10px 12px !important;
+          }
+          .report-stack {
+            margin-top: 12px !important;
+            row-gap: 12px !important;
+          }
+          .print-summary-stack {
+            display: block !important;
+            margin-top: 12px !important;
+          }
+          .print-summary-stack > .report-section {
+            width: 100% !important;
+            margin-top: 0 !important;
+            margin-bottom: 10px !important;
+          }
+          .print-summary-stack > .report-section:last-child {
+            margin-bottom: 0 !important;
+          }
+          .report-section {
+            border-radius: 16px !important;
+          }
+          .report-section > div:first-child {
+            padding: 10px 12px !important;
+          }
+          .report-section > div:last-child {
+            padding: 10px 12px !important;
+          }
+          .report-section ul {
+            gap: 8px !important;
+          }
+          .report-section li {
+            padding: 10px 12px !important;
+          }
+          .report-section table {
+            font-size: 10px !important;
+          }
+          .report-section th,
+          .report-section td {
+            padding: 6px 8px !important;
+          }
+          .report-summary-footer {
+            margin-top: 12px !important;
+          }
+          .report-summary-footer-card {
+            padding: 10px 12px !important;
+            border-radius: 16px !important;
+          }
+          .report-footer {
+            margin-top: 12px !important;
+            padding-top: 10px !important;
           }
           .no-print {
             display: none !important;
@@ -379,10 +467,10 @@ export default function McrReviewPrint() {
       `}</style>
 
       <div className="report-sheet mx-auto w-full max-w-[210mm] overflow-hidden rounded-[30px] border border-slate-300 bg-white shadow-sm">
-        <div className="px-8 py-7 text-[12px] leading-[1.5] text-slate-900">
-          <header className="overflow-hidden rounded-[24px] border border-slate-200 bg-white">
-            <div className="grid grid-cols-[auto_1fr_auto] items-center gap-4 px-6 py-5">
-              <div className="flex items-center justify-center rounded-[18px] border border-slate-200 bg-slate-50 px-3 py-2">
+        <div className="report-shell px-8 py-7 text-[12px] leading-[1.5] text-slate-900">
+          <header className="report-header overflow-hidden rounded-[24px] border border-slate-200 bg-white">
+            <div className="report-header-inner grid grid-cols-[auto_1fr_auto] items-center gap-4 px-6 py-5">
+              <div className="report-logo flex items-center justify-center rounded-[18px] border border-slate-200 bg-slate-50 px-3 py-2">
                 <img
                   src="/kent-business-college-logo.png"
                   alt="Kent Business College logo"
@@ -407,7 +495,7 @@ export default function McrReviewPrint() {
             </div>
           </header>
 
-          <section className="mt-5 grid grid-cols-2 gap-3">
+          <section className="report-details-grid mt-5 grid grid-cols-2 gap-3">
             <DetailCard label="Learner" value={learnerName} />
             <DetailCard label="Coach" value={coachName} />
             <DetailCard label="Programme" value={programmeName} />
@@ -416,7 +504,7 @@ export default function McrReviewPrint() {
             <DetailCard label="Duration" value={`${toNumber(review.totalDurationMin, 0)} minutes`} hint={qualitativeLabel} />
           </section>
 
-          <section className="mt-5 grid grid-cols-4 gap-3">
+          <section className="report-metrics-grid mt-5 grid grid-cols-4 gap-3">
             <MetricCard
               label="Overall QA Score"
               value={formatScoreWithPercent(overallQaScore)}
@@ -439,77 +527,86 @@ export default function McrReviewPrint() {
             />
           </section>
 
-          <section
-            className="print-break-candidate mt-5 grid grid-cols-2 gap-4"
-            data-print-start-threshold="340"
-          >
-            <SectionBlock
-              title="Executive Summary"
-              subtitle="High-level narrative of the session"
-              keepTogether
-              printBreakCandidate={false}
+          {executiveSummaryText || professionalJudgementText ? (
+            <section
+              className="print-summary-stack print-break-candidate mt-5 flex items-start gap-4"
+              data-print-start-threshold="340"
             >
-              <p>{textOrDash(summary.executiveSummary, 'No executive summary recorded.')}</p>
-            </SectionBlock>
+              {executiveSummaryText ? (
+                <SectionBlock
+                  title="Executive Summary"
+                  subtitle="High-level narrative of the session"
+                  keepTogether
+                  printBreakCandidate={false}
+                  className={professionalJudgementText ? 'w-1/2' : 'w-full'}
+                >
+                  <p>{executiveSummaryText}</p>
+                </SectionBlock>
+              ) : null}
 
-            <SectionBlock
-              title="Professional Judgement"
-              subtitle="Overall evaluator view"
-              keepTogether
-              printBreakCandidate={false}
+              {professionalJudgementText ? (
+                <SectionBlock
+                  title="Professional Judgement"
+                  subtitle="Overall evaluator view"
+                  keepTogether
+                  printBreakCandidate={false}
+                  className={executiveSummaryText ? 'w-1/2' : 'w-full'}
+                >
+                  <p>{professionalJudgementText}</p>
+                </SectionBlock>
+              ) : null}
+            </section>
+          ) : null}
+
+          {strengths.length > 0 || areasForDevelopment.length > 0 ? (
+            <section
+              className="print-summary-stack print-break-candidate mt-4 flex items-start gap-4"
+              data-print-start-threshold="320"
             >
-              <p>{textOrDash(summary.professionalJudgement, 'No professional judgement recorded.')}</p>
-            </SectionBlock>
-          </section>
+              {strengths.length > 0 ? (
+                <SectionBlock
+                  title="Strengths"
+                  subtitle="Positive themes captured during review"
+                  keepTogether
+                  printBreakCandidate={false}
+                  className={areasForDevelopment.length > 0 ? 'w-1/2' : 'w-full'}
+                >
+                  <ul className="space-y-2">
+                    {strengths.map((item, index) => (
+                      <li key={`${item}-${index}`} className="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3">
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </SectionBlock>
+              ) : null}
 
-          <section
-            className="print-break-candidate mt-4 grid grid-cols-2 gap-4"
-            data-print-start-threshold="320"
-          >
-            <SectionBlock
-              title="Strengths"
-              subtitle="Positive themes captured during review"
-              keepTogether
-              printBreakCandidate={false}
-            >
-              {summary.strengths.length > 0 ? (
-                <ul className="space-y-2">
-                  {summary.strengths.map((item, index) => (
-                    <li key={`${item}-${index}`} className="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3">
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p>No strengths recorded.</p>
-              )}
-            </SectionBlock>
+              {areasForDevelopment.length > 0 ? (
+                <SectionBlock
+                  title="Areas for Development"
+                  subtitle="Actions and improvements to follow up"
+                  keepTogether
+                  printBreakCandidate={false}
+                  className={strengths.length > 0 ? 'w-1/2' : 'w-full'}
+                >
+                  <ul className="space-y-2">
+                    {areasForDevelopment.map((item, index) => (
+                      <li key={`${item}-${index}`} className="rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3">
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </SectionBlock>
+              ) : null}
+            </section>
+          ) : null}
 
-            <SectionBlock
-              title="Areas for Development"
-              subtitle="Actions and improvements to follow up"
-              keepTogether
-              printBreakCandidate={false}
-            >
-              {summary.areasForDevelopment.length > 0 ? (
-                <ul className="space-y-2">
-                  {summary.areasForDevelopment.map((item, index) => (
-                    <li key={`${item}-${index}`} className="rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3">
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p>No areas for development recorded.</p>
-              )}
-            </SectionBlock>
-          </section>
-
-          <div className="mt-5 space-y-5">
+          <div className="report-stack mt-5 space-y-5">
             <SectionBlock
               title="Meeting Structure and Timing"
               subtitle="Planned and actual timing across the session"
               printStartThreshold={260}
+              printBreakCandidate={false}
             >
               <table className="w-full border-collapse text-[11px]">
                 <thead>
@@ -566,6 +663,7 @@ export default function McrReviewPrint() {
               title="QA Checklist"
               subtitle="Indicator-level quality assessment"
               printStartThreshold={240}
+              printBreakCandidate={false}
             >
               <table className="w-full border-collapse text-[11px]">
                 <thead>
@@ -607,6 +705,7 @@ export default function McrReviewPrint() {
               title="Safeguarding Checklist"
               subtitle="Compliance and safety checks captured during the session"
               printStartThreshold={360}
+              printBreakCandidate={false}
             >
               <table className="w-full border-collapse text-[11px]">
                 <thead>
@@ -646,6 +745,7 @@ export default function McrReviewPrint() {
               title="Transcript Evidence"
               subtitle="Quoted evidence and references captured from the meeting"
               printStartThreshold={120}
+              printBreakCandidate={false}
             >
               {transcriptEvidence.length > 0 ? (
                 <table className="w-full border-collapse text-[11px]">
@@ -674,8 +774,8 @@ export default function McrReviewPrint() {
             </SectionBlock>
           </div>
 
-          <div className="print-break-candidate" data-print-start-threshold="170">
-            <section className="mt-5 rounded-[22px] border border-slate-200 bg-slate-50 px-5 py-4">
+          <div>
+            <section className="report-summary-footer-card mt-5 rounded-[22px] border border-slate-200 bg-slate-50 px-5 py-4">
               <div className="flex items-start justify-between gap-6">
                 <div>
                   <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Overall Rating</p>
@@ -691,7 +791,7 @@ export default function McrReviewPrint() {
               </div>
             </section>
 
-            <footer className="mt-6 flex items-center justify-between border-t border-slate-200 pt-4 text-[11px] text-slate-500">
+            <footer className="report-footer mt-6 flex items-center justify-between border-t border-slate-200 pt-4 text-[11px] text-slate-500">
               <p>Generated by IT Team</p>
               <p>(c) Kent Business College</p>
             </footer>
