@@ -159,7 +159,6 @@ export default function MCRDashboardPage() {
         {/* KPI Cards */}
         <KpiCards kpis={dashboardData?.kpis} isLoading={isLoading} />
 
-        <SessionInsightsPanel sessionStats={dashboardData?.sessionStats} isLoading={isLoading} />
 
         {/* Charts Row â€” RAG donut (narrow) + Volume bar (wide) */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-6">
@@ -178,6 +177,8 @@ export default function MCRDashboardPage() {
         </div>
 
         {/* QA Indicators â€” full width */}
+        <SessionInsightsPanel sessionStats={dashboardData?.sessionStats} isLoading={isLoading} />
+
         <div className="mb-6">
           <QaIndicatorsTrendChart
             data={dashboardData?.charts.qaIndicatorsTrends}
